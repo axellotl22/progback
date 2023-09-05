@@ -21,7 +21,7 @@ Now, you can access _http://127.0.0.1:8080/docs
 Building and running Docker containers requires Docker to be installed. Then:
 ``` bash
 docker build -t progback . # build Docker container
-docker run -it -p 5000:5000 progback # run Docker container
+docker run -it -p 8080:8080 progback # run Docker container
 ```
 
 Now, you can access _http://127.0.0.1:8080/docs

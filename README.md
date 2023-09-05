@@ -7,8 +7,8 @@ This repository contains a minimum RESTful API using Python and Flask. It expose
 Running the API locally requires Python 3.9, install that first. Then:
 
 ``` bash
-python3 -m venv test-api # create virtual environment
-source test-api/bin/activate # activate virtual environment
+python3 -m venv progback # create virtual environment
+source progback/bin/activate # activate virtual environment
 pip3 install -r requirements.txt # install python packages
 
 python3 app/main.py # start API

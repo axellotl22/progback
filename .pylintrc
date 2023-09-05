@@ -1,0 +1,2 @@
+[MESSAGES CONTROL]
+disable=C0303   # deactivate C0303: Trailing whitespace (trailing-whitespace)

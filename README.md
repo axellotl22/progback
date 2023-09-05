@@ -11,7 +11,7 @@ python3 -m venv progback # create virtual environment
 source progback/bin/activate # activate virtual environment
 pip3 install -r requirements.txt # install python packages
 
-python3 app/main.py # start API
+uvicorn app.main:app --reload # start API
 ```
 
 Now, you can access _http://127.0.0.1:8080/docs

@@ -1,23 +1,25 @@
 """
 Test implementation
 """
-from app.main import app, api, HelloWorld, CFG_PORT
+from app.main import app, hello_world, create_item, Item
 
 def test_setup():
     """
     Tests the setup of the API endpoint
     """
     assert app is not None
-    assert api is not None
-    assert CFG_PORT == 8080  # required to properly setup preceding deployment step
+    assert hello_world is not None
+    assert create_item is not None
+    assert Item is not None
 
-    assert HelloWorld is not None
 
-
-def test_endpoint():
+def test_endpoints():
     """
     Tests the endpoint contract
     """
-    hello_world = HelloWorld()
-    res = hello_world.get()
-    assert res['data'] is not None
+    res = hello_world()
+    assert res['hello'] is not None
+
+    res = create_item(Item(name="Portal Gun", price=42.0, id=1))
+    expected = Item(name="Portal Gun", price=42.0, id=1)
+    assert res == expected

@@ -26,6 +26,6 @@ jobs:
     - name: Analysing the code with pylint
       run: |
         python -m pylint test app
-    - name: Unittesting code
+    - name: Test Code
       run: |
         python -m pytest test

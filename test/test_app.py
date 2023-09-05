@@ -1,5 +1,7 @@
+"""
+Test implementation
+"""
 from app.main import app, api, HelloWorld, CFG_PORT
-
 
 def test_setup():
     """

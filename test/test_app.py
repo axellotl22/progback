@@ -9,7 +9,7 @@ def test_setup():
     """
     assert app is not None
     assert api is not None
-    assert CFG_PORT == 5000  # required to properly setup preceding deployment step
+    assert CFG_PORT == 8080  # required to properly setup preceding deployment step
 
     assert HelloWorld is not None
 

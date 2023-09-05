@@ -4,7 +4,7 @@ Test implementation of a Restful API
 from flask import Flask
 from flask_restful import Api, Resource
 
-CFG_PORT = 8080
+CFG_PORT = 80
 app = Flask(__name__)
 api = Api(app)
 

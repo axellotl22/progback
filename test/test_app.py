@@ -3,6 +3,7 @@ Test implementation
 """
 from app.main import app, hello_world, create_item, Item
 
+
 def test_setup():
     """
     Tests the setup of the API endpoint

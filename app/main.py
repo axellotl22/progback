@@ -18,7 +18,7 @@ class HelloWorld(Resource):
         Getter for hello world
         """
 
-        return {"data": "Das ist ein Test"}
+        return {"data": "Das ist ein Test und ich will auch mal sehen, ob ich programmieren kann"}
 
 
 api.add_resource(HelloWorld, '/hello')

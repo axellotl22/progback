@@ -1,7 +1,7 @@
 name: Testing Workflow
 # Executes in every branch
 
-on: [pull_request]
+on: [push, pull_request]
 
 jobs:
 

@@ -26,7 +26,7 @@ def hello_world():
 
     :return:
     """
-    return {"hello": "world"}
+    return {"hello": "kubernetes"}
 
 
 @app.post("/items/")

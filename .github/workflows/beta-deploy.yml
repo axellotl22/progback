@@ -1,0 +1,32 @@
+name: build and deploy
+
+on:
+  push:
+    branches:
+      - 'beta'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - uses: 'actions/checkout@v3'
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v1'
+
+      - name: build and push the docker image
+        env:
+          GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        run: |
+          gcloud auth configure-docker europe-west4-docker.pkg.dev
+          docker build -t europe-west4-docker.pkg.dev/${GOOGLE_PROJECT}/progback-beta/app:latest .
+          docker push europe-west4-docker.pkg.dev/${GOOGLE_PROJECT}/progback-beta/app:latest
+          gcloud run services update beta --image europe-west4-docker.pkg.dev/${GOOGLE_PROJECT}/progbackcomp/app:latest --region europe-west4

@@ -29,4 +29,4 @@ jobs:
           gcloud auth configure-docker europe-west4-docker.pkg.dev
           docker build -t europe-west4-docker.pkg.dev/${GOOGLE_PROJECT}/progbackcomp/app:latest .
           docker push europe-west4-docker.pkg.dev/${GOOGLE_PROJECT}/progbackcomp/app:latest
-          gcloud run services update app
+          gcloud run services update app --image europe-west4-docker.pkg.dev/${GOOGLE_PROJECT}/progbackcomp/app:latest

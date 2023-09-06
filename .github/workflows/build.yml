@@ -24,5 +24,5 @@ jobs:
           GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
         run: |
           gcloud auth configure-docker europe-west4-docker.pkg.dev
-          docker build -t europe-west4-docker.pkg.dev/${GOOGLE_PROJECT}/progbackcomp .
-          docker push europe-west4-docker.pkg.dev/${GOOGLE_PROJECT}/progbackcomp
+          docker build -t europe-west4-docker.pkg.dev/${GOOGLE_PROJECT}/progbackcomp/app:latest .
+          docker push europe-west4-docker.pkg.dev/${GOOGLE_PROJECT}/progbackcomp/app:latest

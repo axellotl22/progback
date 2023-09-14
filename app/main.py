@@ -1,3 +1,7 @@
+"""
+Hauptmodul der App.
+"""
+
 from fastapi import FastAPI
 from app.routers import clustering_router
 

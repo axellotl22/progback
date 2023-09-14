@@ -1,5 +1,9 @@
+"""
+Router für Clustering-Endpunkte.
+"""
+
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from app.models.clustering_model import FileUpload, ClusterResult
+from app.models.clustering_model import ClusterResult
 from app.services.clustering_service import (
     load_dataframe, clean_dataframe, determine_optimal_clusters,
     perform_clustering, delete_file

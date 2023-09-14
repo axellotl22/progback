@@ -1,6 +1,8 @@
+"""
+Tests für die App.
+"""
 from fastapi.testclient import TestClient
 from app.main import app
-from app.models.clustering_model import FileUpload, ClusterResult
 from app.services.clustering_service import (
     load_dataframe, clean_dataframe, determine_optimal_clusters,
     perform_clustering

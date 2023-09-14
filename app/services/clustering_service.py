@@ -1,61 +1,56 @@
 """
 Dienste für Clustering-Funktionen.
 """
-from typing import List
-from sklearn.metrics import silhouette_score
-from sklearn.cluster import KMeans
-import pandas as pd
-import os
-import logging
 
+import logging
+import os
+from typing import List, Tuple
+
+import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 
 logging.basicConfig(level=logging.INFO)
+
+MAX_CLUSTERS = 10
 
 def load_dataframe(file_path: str) -> pd.DataFrame:
     """Lädt eine Datei in ein Pandas DataFrame."""
     if file_path.endswith('.csv'):
-        data_frame = pd.read_csv(file_path)
-    elif file_path.endswith('.xlsx'):
-        data_frame = pd.read_excel(file_path)
-    else:
-        raise ValueError("Unsupported file type")
-    return data_frame
+        return pd.read_csv(file_path)
+    if file_path.endswith('.xlsx'):
+        return pd.read_excel(file_path)
+    raise ValueError("Unsupported file type")
 
 def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
     """Bereinigt das DataFrame von leeren und unvollständigen Zeilen."""
-    data_frame.dropna(inplace=True)
-    # Weitere Bereinigungslogik kann hier hinzugefügt werden
-    return data_frame
+    return data_frame.dropna()
+
+def kmeans_clustering(data_frame: pd.DataFrame, n_clusters: int, random_state: int) -> Tuple[float, List[int]]:
+    """Führt KMeans-Clustering aus und gibt die Trägheit und Labels zurück."""
+    kmeans = KMeans(n_clusters=n_clusters, init='k-means++', max_iter=300, n_init=10, random_state=random_state)
+    kmeans.fit(data_frame)
+    inertia = kmeans.inertia_
+    sil_score = silhouette_score(data_frame, kmeans.labels_)
+    return inertia, sil_score
 
 def determine_optimal_clusters(data_frame: pd.DataFrame) -> int:
     """Bestimmt die optimale Clusteranzahl mittels Elbogen-Methode und Silhouettenmethode."""
     wcss = []
     sil_scores = []
-    # Begrenzen der Anzahl der Cluster auf 10 oder weniger, je nach Größe des DataFrames
-    max_clusters = min(data_frame.shape[0] - 1, 10)  
-    
-    for i in range(2, max_clusters):
-        kmeans = KMeans(n_clusters=i, init='k-means++', max_iter=300, n_init=10, random_state=0)
-        kmeans.fit(data_frame)
-        wcss.append(kmeans.inertia_)
-        sil_scores.append(silhouette_score(data_frame, kmeans.labels_))
+    max_clusters = min(data_frame.shape[0] - 1, MAX_CLUSTERS)
 
     for i in range(2, max_clusters):
-        kmeans = KMeans(n_clusters=i, init='k-means++', random_state=42)
-        kmeans.fit(data_frame)
-        wcss.append(kmeans.inertia_)
-        sil_scores.append(silhouette_score(data_frame, kmeans.labels_))
-
-    # Elbogen-Methode
-    elbow_point = list(range(2, max_clusters))
+        inertia, sil_score = kmeans_clustering(data_frame, i, 0)
+        wcss.append(inertia)
+        sil_scores.append(sil_score)
 
     # Silhouettenmethode
     silhouette_point = [i for i in range(2, max_clusters)][sil_scores.index(max(sil_scores))]
 
-    # Mittelwert beider Methoden
-    optimal_clusters = (elbow_point + silhouette_point) // 2
-
-    return optimal_clusters
+    # Hier könnte eine verbesserte Logik für die Elbogen-Methode hinzugefügt werden
+    # Für den Moment nehmen wir einfach den Silhouettenpunkt
+    return silhouette_point
 
 def perform_clustering(data_frame: pd.DataFrame, n_clusters: int) -> List[int]:
     """Führt KMeans-Clustering auf dem DataFrame aus."""

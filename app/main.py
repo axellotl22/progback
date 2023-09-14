@@ -1,26 +1,6 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from app.routers import clustering_router
 
 app = FastAPI()
 
-
-class Item(BaseModel):
-    """
-        Item Klasse
-    """
-    id: int
-    name: str
-    description: str | None = None
-    price: float
-    tax: float | None = None
-    tags: list[str] = []
-
-
-@app.get("/")
-def hello_world():
-    """
-    Hello World
-
-    :return:
-    """
-    return {"hello": "test deploy"}
+app.include_router(clustering_router.router, prefix="/clustering", tags=["clustering"])

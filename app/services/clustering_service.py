@@ -26,7 +26,9 @@ def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
     """Bereinigt das DataFrame von leeren und unvollständigen Zeilen."""
     return data_frame.dropna()
 
-def kmeans_clustering(data_frame: pd.DataFrame, n_clusters: int, random_state: int) -> Tuple[float, List[int]]:
+def kmeans_clustering(data_frame: pd.DataFrame, 
+                      n_clusters: int, 
+                      random_state: int) -> Tuple[float, List[int]]:
     """Führt KMeans-Clustering aus und gibt die Trägheit und Labels zurück."""
     kmeans = KMeans(n_clusters=n_clusters, init='k-means++', max_iter=300, 
                     n_init=10, random_state=random_state)

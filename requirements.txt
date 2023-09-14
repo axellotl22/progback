@@ -4,7 +4,7 @@ pydantic~=2.3.0
 pandas
 xlrd
 openpyxl
-sklearn
+scikit-learn
 pydantic
 pytest
 fastapi[test]

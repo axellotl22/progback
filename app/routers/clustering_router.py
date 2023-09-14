@@ -19,15 +19,15 @@ async def upload_file(file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             buffer.write(file.file.read())
 
-        df = load_dataframe(file_path)
-        df = clean_dataframe(df)
-        optimal_clusters = determine_optimal_clusters(df)
-        labels = perform_clustering(df, optimal_clusters)
+        data_frame = load_dataframe(file_path)
+        data_frame = clean_dataframe(data_frame)
+        optimal_clusters = determine_optimal_clusters(data_frame)
+        labels = perform_clustering(data_frame, optimal_clusters)
 
         delete_file(file_path)
 
         return {"cluster_labels": labels, "optimal_cluster_count": optimal_clusters}
 
-    except Exception as e:
-        logging.error(f"Error processing file: {e}")
+    except Exception as error:
+        logging.error(f"Error processing file: {error}")
         raise HTTPException(status_code=500, detail="Error processing file.")

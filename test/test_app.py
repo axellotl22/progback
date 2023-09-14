@@ -34,8 +34,8 @@ def test_clustering_endpoint():
     assert "optimal_cluster_count" in data
 
     # Ensure that the number of cluster labels matches the number of rows in the test data
-    df = pd.read_excel("test/test_daten.xlsx")
-    assert len(data["cluster_labels"]) == len(df)
+    data_frame = pd.read_excel("test/test_daten.xlsx")
+    assert len(data["cluster_labels"]) == len(data_frame)
 
     # Ensure that the optimal cluster count is a positive integer
     assert data["optimal_cluster_count"] > 0
@@ -44,15 +44,15 @@ def test_dataframe_functions():
     """
     Tests the DataFrame utility functions using the test data.
     """
-    df = load_dataframe("test/test_daten.xlsx")
-    assert isinstance(df, pd.DataFrame)
-    assert not df.empty
+    data_frame = load_dataframe("test/test_daten.xlsx")
+    assert isinstance(data_frame, pd.DataFrame)
+    assert not data_frame.empty
 
-    cleaned_df = clean_dataframe(df)
-    assert not cleaned_df.empty
+    cleaned_data_frame = clean_dataframe(data_frame)
+    assert not cleaned_data_frame.empty
 
-    optimal_clusters = determine_optimal_clusters(cleaned_df)
+    optimal_clusters = determine_optimal_clusters(cleaned_data_frame)
     assert optimal_clusters > 0
 
-    labels = perform_clustering(cleaned_df, optimal_clusters)
-    assert len(labels) == len(cleaned_df)
+    labels = perform_clustering(cleaned_data_frame, optimal_clusters)
+    assert len(labels) == len(cleaned_data_frame)

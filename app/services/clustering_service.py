@@ -28,7 +28,8 @@ def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
 
 def kmeans_clustering(data_frame: pd.DataFrame, n_clusters: int, random_state: int) -> Tuple[float, List[int]]:
     """Führt KMeans-Clustering aus und gibt die Trägheit und Labels zurück."""
-    kmeans = KMeans(n_clusters=n_clusters, init='k-means++', max_iter=300, n_init=10, random_state=random_state)
+    kmeans = KMeans(n_clusters=n_clusters, init='k-means++', max_iter=300, 
+                    n_init=10, random_state=random_state)
     kmeans.fit(data_frame)
     inertia = kmeans.inertia_
     sil_score = silhouette_score(data_frame, kmeans.labels_)
@@ -46,7 +47,7 @@ def determine_optimal_clusters(data_frame: pd.DataFrame) -> int:
         sil_scores.append(sil_score)
 
     # Silhouettenmethode
-    silhouette_point = [i for i in range(2, max_clusters)][sil_scores.index(max(sil_scores))]
+    silhouette_point = list(range(2, max_clusters))[sil_scores.index(max(sil_scores))]
 
     # Hier könnte eine verbesserte Logik für die Elbogen-Methode hinzugefügt werden
     # Für den Moment nehmen wir einfach den Silhouettenpunkt
@@ -62,6 +63,6 @@ def delete_file(file_path: str):
     """Löscht die angegebene Datei."""
     try:
         os.remove(file_path)
-        logging.info(f"File {file_path} successfully deleted.")
-    except Exception as error:
-        logging.error(f"Error deleting file {file_path}: {error}")
+        logging.info("File %s successfully deleted.", file_path)
+    except OSError as error:
+        logging.error("Error deleting file %s: %s", file_path, error)

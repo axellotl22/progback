@@ -36,5 +36,5 @@ async def upload_file(file: UploadFile = File(...)):
         return {"cluster_labels": labels, "optimal_cluster_count": optimal_clusters}
 
     except Exception as error:
-        logging.error(f"Error processing file: {error}")
-        raise HTTPException(status_code=500, detail="Error processing file.")
+        logging.error("Error processing file: %s", error)
+        raise HTTPException(status_code=500, detail="Error processing file.") from error

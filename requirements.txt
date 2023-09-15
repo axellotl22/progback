@@ -10,3 +10,4 @@ pytest
 fastapi[test]
 python-multipart
 httpx
+shutil

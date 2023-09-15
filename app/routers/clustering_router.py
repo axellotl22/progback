@@ -10,6 +10,9 @@ from app.services.clustering_service import (
     perform_clustering, delete_file
 )
 
+# Test Mode damit die Datei nicht gelöscht wird
+TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"
+
 router = APIRouter()
 TEMP_FILES_DIR = "temp_files/"
 
@@ -57,4 +60,5 @@ async def upload_file(file: UploadFile = File(...)):
         raise HTTPException(500, "Error processing file") from error
 
     finally:
-        delete_file(file_path)
+        if not TEST_MODE:
+            delete_file(file_path)

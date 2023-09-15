@@ -99,7 +99,9 @@ def delete_file(file_path: str):
     - file_path (str): Pfad zur zu löschenden Datei.
     """
     try:
-        os.remove(file_path)
-        logging.info("File %s successfully deleted.", file_path)
+        if os.environ.get("TEST_MODE") != "True":
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                logging.info("File %s successfully deleted.", file_path)
     except OSError as error:
         logging.error("Error deleting file %s: %s", file_path, error)

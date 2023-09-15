@@ -1,20 +1,18 @@
-"""
-Modelle für Clustering.
-"""
+""" Modelle für Clustering. """
 
-from typing import List
+from typing import List, Dict
 
 from pydantic import BaseModel
 
 class FileUpload(BaseModel):
-    """
-    Modell für den Datei-Upload.
-    """
     filename: str
 
+class ClusterPoint(BaseModel):
+    x: float 
+    y: float
+    cluster: int
+
 class ClusterResult(BaseModel):
-    """
-    Modell für das Ergebnis des Clusterings.
-    """
-    cluster_labels: List[int]
-    optimal_cluster_count: int
+    points: List[ClusterPoint] 
+    centroids: List[ClusterPoint]
+    point_to_centroid_mappings: Dict[int, int]

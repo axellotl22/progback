@@ -37,7 +37,7 @@ Progback/
 │ └── main.py                   # Hauptanwendungsdatei
 │
 ├── temp_files/                 # Verzeichnis für hochgeladene Dateien 
-|
+│
 ├── tests/                      # Testverzeichnis
 │ ├── __init__.py
 │ ├── test_app.py               # Haupttestdatei
@@ -65,7 +65,7 @@ Docker ermöglicht es Ihnen, Ihre Anwendung in einem isolierten Container auszuf
 1. Erstellen Sie das Docker-Image:
 
    ```bash
-   docker build -t clustering-api .
+   docker build -t clustering-api 
 2. Starten Sie den Container:
 
     ```bash

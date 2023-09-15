@@ -36,8 +36,8 @@ def load_dataframe(file_path: str) -> pd.DataFrame:
     if file_path.endswith('.parquet'):
         return pd.read_parquet(file_path)
 
-    raise ValueError(f"Unsupported file type: {os.path.splitext(file_path)[1]}")
-
+    raise ValueError(
+        f"Unsupported file type: {os.path.splitext(file_path)[1]}")
 
 
 def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
@@ -69,7 +69,7 @@ def determine_optimal_clusters(data_frame: pd.DataFrame) -> int:
         n_clusters = optimal_K(
             data_frame.values, cluster_array=np.arange(1, min(MAX_CLUSTERS, len(data_frame))))
         return n_clusters
-    
+
     # Für größere Datensätze verwenden Sie die Silhouettenmethode
     else:
         n_clusters = determine_clusters_using_silhouette(data_frame)

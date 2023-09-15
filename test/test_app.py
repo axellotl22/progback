@@ -55,7 +55,9 @@ class TestApp:
         """
         with open(TEST_DATA_COPY_PATH, "rb") as file:
             # Festlegen der Clusteranzahl auf 3 für diesen Test
-            response = client.post("/clustering/perform-kmeans-clustering/", files={"file": file}, data={"clusters": 3})
+            response = client.post(
+                "/clustering/perform-kmeans-clustering/", 
+                files={"file": file}, data={"clusters": 3})
 
         assert response.status_code == 200
 

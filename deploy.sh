@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Installiere LazyDocker für Container Überwachung
+curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+
 # Stoppe existierenden Container
 docker-compose down
 

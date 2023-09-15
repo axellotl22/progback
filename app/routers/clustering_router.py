@@ -1,6 +1,4 @@
-"""
-Router für Clustering-Endpunkte.
-"""
+""" Router für Clustering-Endpunkte. """
 
 import os
 import logging
@@ -52,11 +50,11 @@ async def upload_file(file: UploadFile = File(...)):
 
     except ValueError as error:
         logging.error("Error reading file: %s", error)
-        raise HTTPException(400, "Unsupported file type")
+        raise HTTPException(400, "Unsupported file type") from error
 
     except Exception as error:
         logging.error("Error processing file: %s", error)
-        raise HTTPException(500, "Error processing file")
+        raise HTTPException(500, "Error processing file") from error
 
     finally:
         delete_file(file_path)

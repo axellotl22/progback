@@ -1,5 +1,3 @@
-# tests/test_app.py
-
 """ Tests für die App. """
 
 import os
@@ -17,12 +15,11 @@ client = TestClient(app)
 
 TEST_DATA_PATH = "test/test_daten.xlsx"
 
-
 class TestApp:
-    """Test class for the application."""
+    """Test-Klasse für die Anwendung."""
 
     def test_setup(self):
-        """ Tests the setup of the API endpoint and services. """
+        """ Tests die Einrichtung des API-Endpunkts und der Dienste. """
         
         assert app is not None
         assert load_dataframe is not None
@@ -30,9 +27,8 @@ class TestApp:
         assert determine_optimal_clusters is not None
         assert perform_clustering is not None
 
-
     def test_clustering_endpoint(self):
-        """ Tests the clustering endpoint by uploading a test file and checking the response. """
+        """ Testet den Clustering-Endpunkt durch Hochladen einer Testdatei und Überprüfung der Antwort. """
         
         with open(TEST_DATA_PATH, "rb") as file:
             response = client.post("/clustering/upload/", files={"file": file})
@@ -49,9 +45,8 @@ class TestApp:
         assert len(data["cluster_labels"]) == len(data_frame)
         assert data["optimal_cluster_count"] > 0
 
-
     def test_dataframe_functions(self):
-        """ Tests the DataFrame utility functions using the test data. """
+        """ Testet die DataFrame-Hilfsfunktionen mit den Testdaten. """
         
         data_frame = load_dataframe(TEST_DATA_PATH)
         assert isinstance(data_frame, pd.DataFrame)

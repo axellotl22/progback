@@ -1,6 +1,7 @@
 """
 Tests für die App.
 """
+import os
 
 import pandas as pd
 from fastapi.testclient import TestClient
@@ -34,12 +35,12 @@ class TestApp:
         """
         with open(TEST_DATA_PATH, "rb") as file:
             response = client.post("/clustering/upload/", files={"file": file})
-    
+
         assert response.status_code == 200
         data = response.json()
         assert "cluster_labels" in data
         assert "optimal_cluster_count" in data
-    
+
         uploaded_file_path = f"temp_files/{os.path.basename(TEST_DATA_PATH)}"
         data_frame = pd.read_excel(uploaded_file_path)
         assert len(data["cluster_labels"]) == len(data_frame)

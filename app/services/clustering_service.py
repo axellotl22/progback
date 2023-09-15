@@ -4,8 +4,10 @@ Dienste für Clustering-Funktionen.
 
 import os
 import logging
+import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
+from gap_statistic import OptimalK
 from sklearn.metrics import silhouette_score
 
 # Logging-Einstellungen
@@ -17,14 +19,14 @@ MAX_CLUSTERS = 10
 def load_dataframe(file_path: str) -> pd.DataFrame:
     """
     Lädt eine Datei in ein Pandas DataFrame.
-    
+
     Args:
     - file_path (str): Pfad zur Datei.
-    
+
     Returns:
     - pd.DataFrame: Geladenes DataFrame.
     """
-    
+
     if file_path.endswith('.csv'):
         return pd.read_csv(file_path)
     if file_path.endswith('.xlsx') or file_path.endswith('.xls'):
@@ -33,7 +35,7 @@ def load_dataframe(file_path: str) -> pd.DataFrame:
         return pd.read_json(file_path)
     if file_path.endswith('.parquet'):
         return pd.read_parquet(file_path)
-    
+
     raise ValueError("Unsupported file type")
 
 
@@ -52,7 +54,7 @@ def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
 
 def determine_optimal_clusters(data_frame: pd.DataFrame) -> int:
     """
-    Bestimmt die optimale Clusteranzahl mittels Elbogen-Methode und Silhouettenmethode.
+    Bestimmt die optimale Clusteranzahl mittels verschiedener Methoden abhängig von der Datengröße.
 
     Args:
     - data_frame (pd.DataFrame): DataFrame mit Datenpunkten.
@@ -60,19 +62,34 @@ def determine_optimal_clusters(data_frame: pd.DataFrame) -> int:
     Returns:
     - int: Die optimale Anzahl von Clustern.
     """
+    # Wenn die Datenmenge klein genug ist, verwenden Sie die Gap-Statistik
+    if len(data_frame) < 1000:
+        optimalK = OptimalK(parallel_backend='joblib')
+        n_clusters = optimalK(
+            data_frame.values, cluster_array=np.arange(1, MAX_CLUSTERS))
+        return n_clusters
 
-    def kmeans_clustering(data: pd.DataFrame, n_clusters: int) -> KMeans:
-        """Führt KMeans-Clustering aus und gibt das KMeans-Objekt zurück."""
-        kmeans = KMeans(n_clusters=n_clusters, init='k-means++',
-                        max_iter=300, n_init=10, random_state=0)
-        kmeans.fit(data)
-        return kmeans
+    # Für größere Datensätze verwenden Sie die Silhouettenmethode
+    else:
+        return determine_clusters_using_silhouette(data_frame)
 
+
+def determine_clusters_using_silhouette(data_frame: pd.DataFrame) -> int:
+    """
+    Bestimmt die optimale Clusteranzahl mittels der Silhouetten-Methode.
+
+    Args:
+    - data_frame (pd.DataFrame): DataFrame mit Datenpunkten.
+
+    Returns:
+    - int: Die optimale Anzahl von Clustern.
+    """
     sil_scores = []
     max_clusters = min(data_frame.shape[0] - 1, MAX_CLUSTERS)
 
     for i in range(2, max_clusters):
-        kmeans = kmeans_clustering(data_frame, i)
+        kmeans = KMeans(n_clusters=i, init='k-means++',
+                        max_iter=300, n_init=10, random_state=0).fit(data_frame)
         sil_scores.append(silhouette_score(data_frame, kmeans.labels_))
 
     return list(range(2, max_clusters))[sil_scores.index(max(sil_scores))]

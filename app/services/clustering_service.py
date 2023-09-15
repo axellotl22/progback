@@ -36,7 +36,8 @@ def load_dataframe(file_path: str) -> pd.DataFrame:
     if file_path.endswith('.parquet'):
         return pd.read_parquet(file_path)
 
-    raise ValueError("Unsupported file type")
+    raise ValueError(f"Unsupported file type: {os.path.splitext(file_path)[1]}")
+
 
 
 def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
@@ -64,14 +65,16 @@ def determine_optimal_clusters(data_frame: pd.DataFrame) -> int:
     """
     # Wenn die Datenmenge klein genug ist, verwenden Sie die Gap-Statistik
     if len(data_frame) < 1000:
-        optimalK = OptimalK(parallel_backend='joblib')
-        n_clusters = optimalK(
-            data_frame.values, cluster_array=np.arange(1, MAX_CLUSTERS))
+        optimal_K = OptimalK(parallel_backend='joblib')
+        n_clusters = optimal_K(
+            data_frame.values, cluster_array=np.arange(1, min(MAX_CLUSTERS, len(data_frame))))
         return n_clusters
-
+    
     # Für größere Datensätze verwenden Sie die Silhouettenmethode
     else:
-        return determine_clusters_using_silhouette(data_frame)
+        n_clusters = determine_clusters_using_silhouette(data_frame)
+        # Sicherstellen, dass die Clusteranzahl nicht größer als die Anzahl der Datenpunkte ist.
+        return min(n_clusters, len(data_frame) - 1)
 
 
 def determine_clusters_using_silhouette(data_frame: pd.DataFrame) -> int:
@@ -120,8 +123,9 @@ def delete_file(file_path: str):
     """
     try:
         if os.environ.get("TEST_MODE") != "True":
-            if os.path.exists(file_path):
-                os.remove(file_path)
-                logging.info("File %s successfully deleted.", file_path)
+            os.remove(file_path)
+            logging.info("File %s successfully deleted.", file_path)
+    except FileNotFoundError:
+        logging.warning("File %s was already deleted.", file_path)
     except OSError as error:
         logging.error("Error deleting file %s: %s", file_path, error)

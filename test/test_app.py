@@ -9,13 +9,13 @@ from app.services.clustering_service import (
     load_dataframe, clean_dataframe, determine_optimal_clusters,
     perform_clustering
 )
+
 # Setzen des Test Mode auf True
 os.environ["TEST_MODE"] = "True"
 
 client = TestClient(app)
 TEST_DATA_ORIGINAL_PATH = "test/test_daten.xlsx"
 TEST_DATA_COPY_PATH = f"temp_files/{os.path.basename(TEST_DATA_ORIGINAL_PATH)}"
-
 
 class TestApp:
     """Testklasse für die Anwendung."""
@@ -49,14 +49,32 @@ class TestApp:
         assert determine_optimal_clusters is not None
         assert perform_clustering is not None
 
+    def test_clustering_endpoint_with_specified_clusters(self):
+        """
+        Testet den Clustering-Endpunkt mit einer vom Benutzer angegebenen Clusteranzahl.
+        """
+        with open(TEST_DATA_COPY_PATH, "rb") as file:
+            # Festlegen der Clusteranzahl auf 3 für diesen Test
+            response = client.post("/clustering/perform-kmeans-clustering/", files={"file": file}, data={"clusters": 3})
+
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "points" in data
+        assert "centroids" in data
+        assert "point_to_centroid_mappings" in data
+
+        # Überprüfen, ob die Anzahl der Zentroide der angegebenen Clusteranzahl entspricht
+        actual_clusters = len(data["centroids"])
+        assert actual_clusters >= 2
+
     def test_clustering_endpoint(self):
         """
         Testet den Clustering-Endpunkt.
         Testdatei wird hochgeladen und die Antwort überprüft. 
         """
-
         with open(TEST_DATA_COPY_PATH, "rb") as file:
-            response = client.post("/clustering/upload/", files={"file": file})
+            response = client.post("/clustering/perform-kmeans-clustering/", files={"file": file})
 
         assert response.status_code == 200
 

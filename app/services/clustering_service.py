@@ -6,9 +6,14 @@ import os
 import logging
 import numpy as np
 import pandas as pd
-from sklearn.cluster import KMeans
 from gap_statistic import OptimalK
+from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
+
+# Logging-Einstellungen
+logging.basicConfig(level=logging.INFO)
+
+MAX_CLUSTERS = 10
 
 # Logging-Einstellungen
 logging.basicConfig(level=logging.INFO)
@@ -64,17 +69,19 @@ def determine_optimal_clusters(data_frame: pd.DataFrame) -> int:
     - int: Die optimale Anzahl von Clustern.
     """
     # Wenn die Datenmenge klein genug ist, verwenden Sie die Gap-Statistik
+    # Wenn die Datenmenge klein genug ist, verwenden Sie die Gap-Statistik
     if len(data_frame) < 1000:
-        optimal_K = OptimalK(parallel_backend='joblib')
-        n_clusters = optimal_K(
+        optimal_k = OptimalK(parallel_backend='joblib')
+        n_clusters = optimal_k(
             data_frame.values, cluster_array=np.arange(1, min(MAX_CLUSTERS, len(data_frame))))
         return n_clusters
 
     # Für größere Datensätze verwenden Sie die Silhouettenmethode
-    else:
-        n_clusters = determine_clusters_using_silhouette(data_frame)
-        # Sicherstellen, dass die Clusteranzahl nicht größer als die Anzahl der Datenpunkte ist.
-        return min(n_clusters, len(data_frame) - 1)
+    n_clusters = determine_clusters_using_silhouette(data_frame)
+    
+    # Sicherstellen, dass die Clusteranzahl nicht größer als die Anzahl der Datenpunkte ist.
+    return min(n_clusters, len(data_frame) - 1)
+
 
 
 def determine_clusters_using_silhouette(data_frame: pd.DataFrame) -> int:

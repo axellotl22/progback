@@ -17,20 +17,23 @@ MAX_CLUSTERS = 10
 def load_dataframe(file_path: str) -> pd.DataFrame:
     """
     Lädt eine Datei in ein Pandas DataFrame.
-
+    
     Args:
     - file_path (str): Pfad zur Datei.
-
+    
     Returns:
     - pd.DataFrame: Geladenes DataFrame.
     """
-
+    
     if file_path.endswith('.csv'):
         return pd.read_csv(file_path)
-
-    if file_path.endswith('.xlsx'):
+    if file_path.endswith('.xlsx') or file_path.endswith('.xls'):
         return pd.read_excel(file_path)
-
+    if file_path.endswith('.json'):
+        return pd.read_json(file_path)
+    if file_path.endswith('.parquet'):
+        return pd.read_parquet(file_path)
+    
     raise ValueError("Unsupported file type")
 
 

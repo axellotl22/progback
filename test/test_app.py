@@ -6,7 +6,9 @@ import pandas as pd
 from fastapi.testclient import TestClient
 from app.main import app
 from app.services.clustering_service import (
-    load_dataframe, clean_dataframe, determine_optimal_clusters,
+    load_dataframe, 
+    clean_dataframe, 
+    determine_optimal_clusters,
     perform_clustering
 )
 
@@ -32,13 +34,14 @@ class TestApp:
         """
         with open(TEST_DATA_PATH, "rb") as file:
             response = client.post("/clustering/upload/", files={"file": file})
-
+    
         assert response.status_code == 200
         data = response.json()
         assert "cluster_labels" in data
         assert "optimal_cluster_count" in data
-
-        data_frame = pd.read_excel(TEST_DATA_PATH)
+    
+        uploaded_file_path = f"temp_files/{os.path.basename(TEST_DATA_PATH)}"
+        data_frame = pd.read_excel(uploaded_file_path)
         assert len(data["cluster_labels"]) == len(data_frame)
         assert data["optimal_cluster_count"] > 0
 

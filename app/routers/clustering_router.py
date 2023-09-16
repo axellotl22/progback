@@ -18,6 +18,7 @@ TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"
 router = APIRouter()
 TEMP_FILES_DIR = "temp_files/"
 
+
 @router.post("/perform-kmeans-clustering/", response_model=ClusterResult)
 async def perform_kmeans_clustering(
     file: UploadFile = File(...),
@@ -28,7 +29,7 @@ async def perform_kmeans_clustering(
     die Clustering-Ergebnisse zurück. Der Benutzer kann optional 
     die Anzahl der Cluster und die zu berücksichtigenden Spalten bestimmen.
     """
-    
+
     # Überprüfen und Konvertieren von 'columns'
     if isinstance(columns, str):
         try:
@@ -38,7 +39,8 @@ async def perform_kmeans_clustering(
             if not all(isinstance(item, int) for item in columns):
                 raise ValueError("Ungültige Werte in columns Eingabe.")
         except:
-            raise HTTPException(400, "Ungültiges Format für columns. Erwartet eine Liste von Ganzzahlen.")
+            raise HTTPException(
+                400, "Ungültiges Format für columns. Erwartet eine Liste von Ganzzahlen.")
 
     if not os.path.exists(TEMP_FILES_DIR):
         os.makedirs(TEMP_FILES_DIR)

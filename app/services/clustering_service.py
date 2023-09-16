@@ -16,6 +16,7 @@ logging.basicConfig(level=logging.INFO)
 
 MAX_CLUSTERS = 10
 
+
 def load_dataframe(file_path: str) -> pd.DataFrame:
     """
     Lädt eine Datei in ein Pandas DataFrame.
@@ -29,13 +30,16 @@ def load_dataframe(file_path: str) -> pd.DataFrame:
     if file_path.endswith('.parquet'):
         return pd.read_parquet(file_path)
 
-    raise ValueError(f"Unsupported file type: {os.path.splitext(file_path)[1]}")
+    raise ValueError(
+        f"Unsupported file type: {os.path.splitext(file_path)[1]}")
+
 
 def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
     """
     Bereinigt das DataFrame von leeren und unvollständigen Zeilen.
     """
     return data_frame.dropna()
+
 
 def determine_optimal_clusters(data_frame: pd.DataFrame) -> int:
     """
@@ -49,6 +53,7 @@ def determine_optimal_clusters(data_frame: pd.DataFrame) -> int:
 
     n_clusters = determine_clusters_using_silhouette(data_frame)
     return min(n_clusters, len(data_frame) - 1)
+
 
 def determine_clusters_using_silhouette(data_frame: pd.DataFrame) -> int:
     """
@@ -64,13 +69,15 @@ def determine_clusters_using_silhouette(data_frame: pd.DataFrame) -> int:
 
     return list(range(2, max_clusters))[sil_scores.index(max(sil_scores))]
 
+
 def select_columns(data_frame: pd.DataFrame, columns: List[int]) -> pd.DataFrame:
     """
     Wählt bestimmte Spalten aus einem DataFrame aus basierend auf deren Index.
     """
     if any(col_idx >= len(data_frame.columns) for col_idx in columns):
-        raise ValueError(f"Ungültiger Spaltenindex. Das DataFrame hat nur {len(data_frame.columns)} Spalten.")
-    
+        raise ValueError(
+            f"Ungültiger Spaltenindex. Das DataFrame hat nur {len(data_frame.columns)} Spalten.")
+
     selected_columns = [data_frame.columns[idx] for idx in columns]
     return data_frame[selected_columns]
 
@@ -79,7 +86,8 @@ def perform_clustering(data_frame: pd.DataFrame, n_clusters: int) -> dict:
     """
     Führt KMeans-Clustering auf dem DataFrame aus und gibt die Ergebnisse im gewünschten Format zurück.
     """
-    kmeans = KMeans(n_clusters=n_clusters, init='k-means++', random_state=42, n_init=MAX_CLUSTERS)
+    kmeans = KMeans(n_clusters=n_clusters, init='k-means++',
+                    random_state=42, n_init=MAX_CLUSTERS)
     kmeans.fit(data_frame)
 
     points = [{"x": point[0], "y": point[1], "cluster": label}
@@ -95,6 +103,7 @@ def perform_clustering(data_frame: pd.DataFrame, n_clusters: int) -> dict:
         "y_label": data_frame.columns[1]
     }
     return response_data
+
 
 def delete_file(file_path: str):
     """

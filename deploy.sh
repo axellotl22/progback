@@ -1,7 +1,12 @@
 #!/bin/bash
 
-# Installiere LazyDocker für Container Überwachung
-curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+# Überprüfe, ob LazyDocker installiert ist. Wenn nicht, installiere es.
+if ! command -v lazydocker &> /dev/null; then
+    echo "LazyDocker ist nicht installiert. Installation läuft..."
+    curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+else
+    echo "LazyDocker ist bereits installiert."
+fi
 
 # Stoppe existierenden Container
 docker-compose down

@@ -2,13 +2,14 @@
 
 import os
 import logging
+import ast
 
-from typing import Optional
+from typing import Optional, List, Union
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.models.clustering_model import ClusterResult, ClusterPoint
 from app.services.clustering_service import (
-    load_dataframe, clean_dataframe, determine_optimal_clusters,
+    load_dataframe, clean_dataframe, select_columns, determine_optimal_clusters,
     perform_clustering, delete_file
 )
 
@@ -17,13 +18,27 @@ TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"
 router = APIRouter()
 TEMP_FILES_DIR = "temp_files/"
 
-
 @router.post("/perform-kmeans-clustering/", response_model=ClusterResult)
-async def perform_kmeans_clustering(file: UploadFile = File(...), clusters: Optional[int] = None):
+async def perform_kmeans_clustering(
+    file: UploadFile = File(...),
+    clusters: Optional[int] = None,
+    columns: Optional[Union[str, List[int]]] = None
+):
     """Dieser Endpunkt verarbeitet die hochgeladene Datei und gibt 
     die Clustering-Ergebnisse zurück. Der Benutzer kann optional 
-    die Anzahl der Cluster bestimmen.
+    die Anzahl der Cluster und die zu berücksichtigenden Spalten bestimmen.
     """
+    
+    # Überprüfen und Konvertieren von 'columns'
+    if isinstance(columns, str):
+        try:
+            # Verwenden von ast.literal_eval zur sicheren Auswertung von Strings als Python-Ausdrücke
+
+            columns = ast.literal_eval(columns)
+            if not all(isinstance(item, int) for item in columns):
+                raise ValueError("Ungültige Werte in columns Eingabe.")
+        except:
+            raise HTTPException(400, "Ungültiges Format für columns. Erwartet eine Liste von Ganzzahlen.")
 
     if not os.path.exists(TEMP_FILES_DIR):
         os.makedirs(TEMP_FILES_DIR)
@@ -37,7 +52,9 @@ async def perform_kmeans_clustering(file: UploadFile = File(...), clusters: Opti
         data_frame = load_dataframe(file_path)
         data_frame = clean_dataframe(data_frame)
 
-        # Überprüfung für ungültige Clusteranzahl
+        if columns:
+            data_frame = select_columns(data_frame, columns)
+
         if clusters is None:
             optimal_clusters = determine_optimal_clusters(data_frame)
         else:
@@ -45,25 +62,25 @@ async def perform_kmeans_clustering(file: UploadFile = File(...), clusters: Opti
                 raise HTTPException(400, "Ungültige Anzahl von Clustern")
             optimal_clusters = clusters
 
-        kmeans = perform_clustering(data_frame, optimal_clusters)
+        clustering_results = perform_clustering(data_frame, optimal_clusters)
 
         centroids = [
-            ClusterPoint(x=c[0], y=c[1], cluster=i)
-            for i, c in enumerate(kmeans.cluster_centers_)
+            ClusterPoint(x=c["x"], y=c["y"], cluster=c["cluster"])
+            for c in clustering_results["centroids"]
         ]
         points = [
-            ClusterPoint(x=p[0], y=p[1], cluster=l)
-            for p, l in zip(data_frame.values, kmeans.labels_)
+            ClusterPoint(x=p["x"], y=p["y"], cluster=p["cluster"])
+            for p in clustering_results["points"]
         ]
-        point_to_centroid = dict(zip(range(len(points)), kmeans.labels_))
 
         return ClusterResult(
+            x_label=clustering_results["x_label"],
+            y_label=clustering_results["y_label"],
             points=points,
             centroids=centroids,
-            point_to_centroid_mappings=point_to_centroid
+            point_to_centroid_mappings=clustering_results["point_to_centroid_mappings"]
         )
 
-    # Fehlerbehandlung
     except ValueError as error:
         logging.error("Fehler beim Lesen der Datei: %s", error)
         raise HTTPException(400, "Nicht unterstützter Dateityp") from error

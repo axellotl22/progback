@@ -37,3 +37,5 @@ class ClusterResult(BaseModel):
     points: List[ClusterPoint]
     centroids: List[ClusterPoint]
     point_to_centroid_mappings: Dict[int, int]
+    x_label: str
+    y_label: str

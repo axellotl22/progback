@@ -9,6 +9,8 @@ Das Projekt stellt eine API bereit, mit der Datenpunkte mithilfe des Clustering-
 - [Repository-Struktur](#repository-struktur)
 - [Deployment](#deployment)
 - [API-Dokumentation](#api-dokumentation)
+- [Request](#request)
+- [Response](#response)
 
 ## Voraussetzungen
 
@@ -46,7 +48,7 @@ Progback/
 ├── .github/                    # GitHub-spezifische Dateien
 │ └── workflows/                # CI/CD-Workflows
 │
-├── deployment.sh               # Automatisierte Bereitstellung des Containers und Lazydocker
+├── deploy.sh                   # Automatisierte Bereitstellung des Containers und Lazydocker 
 ├── docker-compose.yml
 ├── Dockerfile
 ├── .gitignore
@@ -99,3 +101,57 @@ Das Skript wird automatisch LazyDocker installieren (wenn es noch nicht installi
 ## API-Dokumentation
 Die RESTful Webservice-API wird über [Swagger](https://swagger.io/) dokumentiert. Die Dokumentation kann auf der folgenden
 URL aufgerufen werden: http://localhost:8080/docs
+
+## Request
+
+Um den Endpunkt zu nutzen, sendet man eine POST-Anfrage mit folgenden Parametern:
+
+- **file**: Die Excel- oder CSV-Datei zum Clustern (Pflicht). Als Formdaten senden.
+
+- **clusters** (optional): Die gewünschte Anzahl an Clustern. Wenn nicht angegeben, wird die optimale Zahl automatisch bestimmt. 
+
+- **columns** (optional): Eine Liste mit Spaltennamen, die fürs Clustering verwendet werden sollen. Standardmäßig die ersten zwei Spalten. 
+
+Beispiel bei lokaler ausführung:
+```bash
+     curl -X 'POST' \
+    'http://localhost:8080/clustering/perform-kmeans-clustering/' \
+    -H 'accept: application/json' \
+    -H 'Content-Type: multipart/form-data' \
+    -F 'file=@Hier_die_Datei_angeben.xlsx;type=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' \
+    -F 'columns='
+```
+
+
+## Response
+
+Die API antwortet mit einem JSON-Objekt, das Folgendes enthält:
+
+- **points**: Die geclusterten Datenpunkte mit Koordinaten und Cluster.
+- **centroids**: Die Koordinaten der generierten Cluster-Zentroids.
+- **point_to_centroid_mappings**: Eine Abbildung von Punkten zu ihrem zugehörigen Zentroid.
+
+```json  
+{
+  "points": [
+    {
+      "x": 0,
+      "y": 0,
+      "cluster": 0
+    }
+  ],
+  "centroids": [
+    {
+      "x": 0,
+      "y": 0,
+      "cluster": 0
+    }
+  ],
+  "point_to_centroid_mappings": {
+    "additionalProp1": 0,
+    "additionalProp2": 0,
+    "additionalProp3": 0
+  },
+  "x_label": "string",
+  "y_label": "string"
+}

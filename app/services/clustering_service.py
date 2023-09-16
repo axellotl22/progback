@@ -69,7 +69,6 @@ def determine_optimal_clusters(data_frame: pd.DataFrame) -> int:
     - int: Die optimale Anzahl von Clustern.
     """
     # Wenn die Datenmenge klein genug ist, verwenden Sie die Gap-Statistik
-    # Wenn die Datenmenge klein genug ist, verwenden Sie die Gap-Statistik
     if len(data_frame) < 1000:
         optimal_k = OptimalK(parallel_backend='joblib')
         n_clusters = optimal_k(

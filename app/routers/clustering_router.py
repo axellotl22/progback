@@ -2,7 +2,6 @@
 
 import os
 import logging
-import ast
 
 from typing import Optional, List, Union
 
@@ -10,14 +9,13 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.models.clustering_model import ClusterResult, ClusterPoint
 from app.services.clustering_service import (
     load_dataframe, clean_dataframe, select_columns, determine_optimal_clusters,
-    perform_clustering, delete_file
+    perform_clustering, delete_file, process_columns_input
 )
 
 TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"
-
-router = APIRouter()
 TEMP_FILES_DIR = "temp_files/"
 
+router = APIRouter()
 
 @router.post("/perform-kmeans-clustering/", response_model=ClusterResult)
 async def perform_kmeans_clustering(
@@ -25,22 +23,13 @@ async def perform_kmeans_clustering(
     clusters: Optional[int] = None,
     columns: Optional[Union[str, List[int]]] = None
 ):
-    """Dieser Endpunkt verarbeitet die hochgeladene Datei und gibt 
+    """
+    Dieser Endpunkt verarbeitet die hochgeladene Datei und gibt 
     die Clustering-Ergebnisse zurück. Der Benutzer kann optional 
     die Anzahl der Cluster und die zu berücksichtigenden Spalten bestimmen.
     """
-
-    # Überprüfen und Konvertieren von 'columns'
-    if isinstance(columns, str):
-        try:
-            # Verwenden von ast.literal_eval zur sicheren Auswertung von Strings als Python-Ausdrücke
-
-            columns = ast.literal_eval(columns)
-            if not all(isinstance(item, int) for item in columns):
-                raise ValueError("Ungültige Werte in columns Eingabe.")
-        except:
-            raise HTTPException(
-                400, "Ungültiges Format für columns. Erwartet eine Liste von Ganzzahlen.")
+    if columns:
+        columns = process_columns_input(columns)
 
     if not os.path.exists(TEMP_FILES_DIR):
         os.makedirs(TEMP_FILES_DIR)

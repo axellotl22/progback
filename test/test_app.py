@@ -48,7 +48,9 @@ class TestApp:
         """Testet den Clustering-Endpunkt mit einer vom Benutzer angegebenen Clusteranzahl."""
         with open(TEST_DATA_COPY_PATH, "rb") as file:
             response = client.post(
-                "/clustering/perform-kmeans-clustering/", files={"file": file}, data={"clusters": 3})
+                "/clustering/perform-kmeans-clustering/", 
+                files={"file": file}, data={"clusters": 3}
+                )
         assert response.status_code == 200
         data = response.json()
         assert "points" in data
@@ -91,7 +93,9 @@ class TestApp:
         """Testet den Clustering-Endpunkt mit columns als Listenform."""
         with open(TEST_DATA_COPY_PATH, "rb") as file:
             response = client.post(
-                "/clustering/perform-kmeans-clustering/", files={"file": file}, data={"columns": "0,2"})
+                "/clustering/perform-kmeans-clustering/", 
+                files={"file": file}, data={"columns": "0,2"}
+                )
         assert response.status_code == 200
         data = response.json()
         assert "points" in data

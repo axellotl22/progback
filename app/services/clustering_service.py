@@ -2,14 +2,19 @@
 Dienste für Clustering-Funktionen.
 """
 
-import os
+import ast
 import logging
+import os
+from typing import List, Union
+
 import numpy as np
 import pandas as pd
+from fastapi import HTTPException, UploadFile
 from gap_statistic import OptimalK
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
-from typing import List
+
+
 
 # Logging-Einstellungen
 logging.basicConfig(level=logging.INFO)
@@ -84,7 +89,8 @@ def select_columns(data_frame: pd.DataFrame, columns: List[int]) -> pd.DataFrame
 
 def perform_clustering(data_frame: pd.DataFrame, n_clusters: int) -> dict:
     """
-    Führt KMeans-Clustering auf dem DataFrame aus und gibt die Ergebnisse im gewünschten Format zurück.
+    Führt KMeans-Clustering auf dem DataFrame aus 
+    und gibt die Ergebnisse im gewünschten Format zurück.
     """
     kmeans = KMeans(n_clusters=n_clusters, init='k-means++',
                     random_state=42, n_init=MAX_CLUSTERS)
@@ -117,3 +123,16 @@ def delete_file(file_path: str):
         logging.warning("File %s was already deleted.", file_path)
     except OSError as error:
         logging.error("Error deleting file %s: %s", file_path, error)
+
+
+def process_columns_input(columns: Union[str, List[int]]) -> List[int]:
+    """Verarbeitet die Eingabe von 'columns' und gibt sie als Liste von Ganzzahlen zurück."""
+    if isinstance(columns, str):
+        try:
+            columns = ast.literal_eval(columns)
+            if not all(isinstance(item, int) for item in columns):
+                raise ValueError("Ungültige Werte in columns Eingabe.")
+        except Exception as exc:
+            raise HTTPException(
+                400, "Ungültiges Format für columns. Erwartet eine Liste von Ganzzahlen.") from exc
+    return columns

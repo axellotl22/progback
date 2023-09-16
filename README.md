@@ -34,6 +34,7 @@ Progback/
 │ │ ├── clustering_model.py     # Modelle für Eingabe-/Ausgabedaten
 │ ├── services/                 # Dienstprogramme und Services
 │ │ ├── clustering_service.py   # Dienstprogramme für KMeans-Clustering
+│ │  
 │ └── main.py                   # Hauptanwendungsdatei
 │
 ├── temp_files/                 # Verzeichnis für hochgeladene Dateien 

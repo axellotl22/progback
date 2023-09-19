@@ -124,16 +124,3 @@ def delete_file(file_path: str):
         logging.warning("File %s was already deleted.", file_path)
     except OSError as error:
         logging.error("Error deleting file %s: %s", file_path, error)
-
-
-def process_columns_input(columns: Union[str, List[int]]) -> List[int]:
-    """Verarbeitet die Eingabe von 'columns' und gibt sie als Liste von Ganzzahlen zurück."""
-    if isinstance(columns, str):
-        try:
-            columns = ast.literal_eval(columns)
-            if not all(isinstance(item, int) for item in columns):
-                raise ValueError("Ungültige Werte in columns Eingabe.")
-        except Exception as exc:
-            raise HTTPException(
-                400, "Ungültiges Format für columns. Erwartet eine Liste von Ganzzahlen.") from exc
-    return columns

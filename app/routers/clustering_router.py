@@ -9,7 +9,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.models.clustering_model import ClusterResult
 from app.services.clustering_service import (
     load_dataframe, clean_dataframe, select_columns, determine_optimal_clusters,
-    perform_clustering, delete_file, process_columns_input
+    perform_clustering, delete_file
 )
 
 TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"
@@ -21,15 +21,21 @@ router = APIRouter()
 async def perform_kmeans_clustering(
     file: UploadFile = File(...),
     clusters: Optional[int] = None,
-    columns: Optional[Union[str, List[int]]] = None
+    column1: Optional[Union[str, int]] = None,
+    column2: Optional[Union[str, int]] = None  
 ):
     """
     Dieser Endpunkt verarbeitet die hochgeladene Datei und gibt 
     die Clustering-Ergebnisse zurück. Der Benutzer kann optional 
     die Anzahl der Cluster und die zu berücksichtigenden Spalten bestimmen.
     """
-    if columns:
-        columns = process_columns_input(columns)
+    # Umwandeln von column1 und column2 in Integer, wenn sie Strings sind
+    if isinstance(column1, str):
+        column1 = int(column1)
+    if isinstance(column2, str):
+        column2 = int(column2)
+
+    columns = [column1, column2] if column1 is not None and column2 is not None else None
 
     if not os.path.exists(TEMP_FILES_DIR):
         os.makedirs(TEMP_FILES_DIR)

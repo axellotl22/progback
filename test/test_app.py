@@ -43,9 +43,9 @@ class TestApp:
     def test_clustering_endpoint_with_specified_clusters(self):
         with open(TEST_DATA_COPY_PATH, "rb") as file:
             response = client.post(
-                "/clustering/perform-kmeans-clustering/", 
+                "/clustering/perform-kmeans-clustering/",
                 files={"file": file}, data={"clusters": 3}
-                )
+            )
         assert response.status_code == 200
         data = response.json()
         assert "cluster" in data
@@ -83,7 +83,8 @@ class TestApp:
         kmeans_results = perform_clustering(
             cleaned_data_frame, optimal_clusters)
 
-        labels = [cluster['clusterNr'] for cluster in kmeans_results['cluster'] for _ in cluster['points']]
+        labels = [cluster['clusterNr']
+                  for cluster in kmeans_results['cluster'] for _ in cluster['points']]
         assert len(labels) == len(cleaned_data_frame)
 
     def test_select_columns_with_test_data(self):

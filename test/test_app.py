@@ -5,9 +5,12 @@ import shutil
 import pandas as pd
 from fastapi.testclient import TestClient
 from app.main import app
+
 from app.services.clustering_service import (
-    load_dataframe, clean_dataframe, determine_optimal_clusters,
-    perform_clustering, select_columns
+    determine_optimal_clusters, perform_clustering
+)
+from app.services.utils_service import (
+    load_dataframe, clean_dataframe, select_columns
 )
 
 os.environ["TEST_MODE"] = "True"

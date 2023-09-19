@@ -1,5 +1,6 @@
 """ Router für Clustering-Endpunkte. """
 
+
 import os
 import logging
 
@@ -7,10 +8,14 @@ from typing import Optional, Union
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from app.models.clustering_model import ClusterResult
+
+
 from app.services.clustering_service import (
-    load_dataframe, clean_dataframe, select_columns, determine_optimal_clusters,
-    perform_clustering, delete_file
+    determine_optimal_clusters, perform_clustering
 )
+
+from app.services.utils_service import (
+    load_dataframe, clean_dataframe, select_columns, delete_file)
 
 TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"
 TEMP_FILES_DIR = "temp_files/"

@@ -5,7 +5,7 @@ import logging
 
 from typing import Optional, Union
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from app.models.clustering_model import ClusterResult
 from app.services.clustering_service import (
     load_dataframe, clean_dataframe, select_columns, determine_optimal_clusters,
@@ -22,13 +22,21 @@ async def perform_kmeans_clustering(
     file: UploadFile = File(...),
     clusters: Optional[int] = None,
     column1: Optional[Union[str, int]] = None,
-    column2: Optional[Union[str, int]] = None  
+    column2: Optional[Union[str, int]] = None,
+    distance_metric: Optional[str] = Query("EUCLIDEAN", alias="distanceMetric", description="Mögliche Distanzmaße: EUCLIDEAN, MANHATTAN, CHEBYSHEV, MINKOWSKI")
 ):
     """
     Dieser Endpunkt verarbeitet die hochgeladene Datei und gibt 
     die Clustering-Ergebnisse zurück. Der Benutzer kann optional 
-    die Anzahl der Cluster und die zu berücksichtigenden Spalten bestimmen.
+    die Anzahl der Cluster, die zu berücksichtigenden Spalten 
+    und das Distanzmaß bestimmen.
     """
+    supported_distance_metrics = ["EUCLIDEAN", "MANHATTAN", "CHEBYSHEV", "MINKOWSKI"]
+    
+    # Überprüfen Sie, ob das bereitgestellte Distanzmaß unterstützt wird
+    if distance_metric not in supported_distance_metrics:
+        raise HTTPException(400, f"Ungültiges Distanzmaß. Unterstützte Maße sind: {', '.join(supported_distance_metrics)}")
+
     # Umwandeln von column1 und column2 in Integer, wenn sie Strings sind
     if isinstance(column1, str):
         column1 = int(column1)
@@ -59,14 +67,15 @@ async def perform_kmeans_clustering(
                 raise HTTPException(400, "Ungültige Anzahl von Clustern")
             optimal_clusters = clusters
 
-        clustering_results = perform_clustering(data_frame, optimal_clusters)
+        clustering_results = perform_clustering(data_frame, optimal_clusters, distance_metric)
 
         return ClusterResult(
             name=f"K-Means Ergebnis von: {os.path.splitext(file.filename)[0]}",
             cluster=clustering_results["cluster"],
             x_label=clustering_results["x_label"],
             y_label=clustering_results["y_label"],
-            iterations=clustering_results["iterations"]
+            iterations=clustering_results["iterations"],
+            distance_metric=distance_metric
         )
 
     except ValueError as error:

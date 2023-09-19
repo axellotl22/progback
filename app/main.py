@@ -7,6 +7,7 @@ from app.routers import clustering_router
 
 app = FastAPI()
 
+# Router für KMeans Clustering
 app.include_router(clustering_router.router, prefix="/clustering", tags=["clustering"])
 
 # Optional: Wenn die App direkt ausgeführt werden soll

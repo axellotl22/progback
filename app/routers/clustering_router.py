@@ -6,7 +6,7 @@ import logging
 from typing import Optional, List, Union
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from app.models.clustering_model import ClusterResult, ClusterPoint
+from app.models.clustering_model import ClusterResult
 from app.services.clustering_service import (
     load_dataframe, clean_dataframe, select_columns, determine_optimal_clusters,
     perform_clustering, delete_file, process_columns_input
@@ -55,21 +55,11 @@ async def perform_kmeans_clustering(
 
         clustering_results = perform_clustering(data_frame, optimal_clusters)
 
-        centroids = [
-            ClusterPoint(x=c["x"], y=c["y"], cluster=c["cluster"])
-            for c in clustering_results["centroids"]
-        ]
-        points = [
-            ClusterPoint(x=p["x"], y=p["y"], cluster=p["cluster"])
-            for p in clustering_results["points"]
-        ]
-
         return ClusterResult(
+            name=f"K-Means Ergebnis von: {os.path.splitext(file.filename)[0]}",
+            cluster=clustering_results["cluster"],
             x_label=clustering_results["x_label"],
-            y_label=clustering_results["y_label"],
-            points=points,
-            centroids=centroids,
-            point_to_centroid_mappings=clustering_results["point_to_centroid_mappings"]
+            y_label=clustering_results["y_label"]
         )
 
     except ValueError as error:

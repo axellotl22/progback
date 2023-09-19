@@ -96,15 +96,16 @@ def perform_clustering(data_frame: pd.DataFrame, n_clusters: int) -> dict:
                     random_state=42, n_init=MAX_CLUSTERS)
     kmeans.fit(data_frame)
 
-    points = [{"x": point[0], "y": point[1], "cluster": label}
-              for point, label in zip(data_frame.values, kmeans.labels_)]
-    centroids = [{"x": centroid[0], "y": centroid[1], "cluster": idx}
-                 for idx, centroid in enumerate(kmeans.cluster_centers_)]
+    clusters = []
+    for idx in range(n_clusters):
+        cluster_points = [{"x": point[0], "y": point[1]}
+                         for point, label in zip(data_frame.values, kmeans.labels_) if label == idx]
+        centroid = {"x": kmeans.cluster_centers_[idx][0], "y": kmeans.cluster_centers_[idx][1]}
+        clusters.append({"clusterNr": idx, "centroid": centroid, "points": cluster_points})
 
     response_data = {
-        "points": points,
-        "centroids": centroids,
-        "point_to_centroid_mappings": dict(enumerate(kmeans.labels_)),
+        "name": "K-Means Clustering Ergebnis",
+        "cluster": clusters,
         "x_label": data_frame.columns[0],
         "y_label": data_frame.columns[1]
     }

@@ -12,30 +12,42 @@ class FileUpload(BaseModel):
     """
     filename: str
 
-class ClusterPoint(BaseModel):
+class Centroid(BaseModel):
     """
-    Modell für einen Punkt innerhalb eines Clusters.
+    Modell für ein Zentroid eines Clusters.
     
     Attributes:
-    - x (float): X-Koordinate des Punktes.
-    - y (float): Y-Koordinate des Punktes.
-    - cluster (int): Zugehöriger Cluster des Punktes.
+    - x (float): X-Koordinate des Zentroiden.
+    - y (float): Y-Koordinate des Zentroiden.
     """
     x: float
     y: float
-    cluster: int
+
+class Cluster(BaseModel):
+    """
+    Modell für ein Cluster.
+    
+    Attributes:
+    - clusterNr (int): Nummer des Clusters.
+    - centroid (Centroid): Zentroid des Clusters.
+    - points (List[Dict[str, float]]): Liste von Punkten innerhalb des Clusters.
+    """
+    clusterNr: int
+    centroid: Centroid
+    points: List[Dict[str, float]]
 
 class ClusterResult(BaseModel):
     """
     Modell für das Ergebnis des Clustering-Prozesses.
     
     Attributes:
-    - points (List[ClusterPoint]): Liste von Punkten innerhalb der Cluster.
-    - centroids (List[ClusterPoint]): Liste von Zentroiden für die Cluster.
-    - point_to_centroid_mappings (Dict[int, int]): Zuordnung von Punkten zu ihren Zentroiden.
+    - name (str): Name des Clustering-Ergebnisses.
+    - cluster (List[Cluster]): Liste von Clustern.
+    - x_label (str): Label für die X-Achse.
+    - y_label (str): Label für die Y-Achse.
     """
-    points: List[ClusterPoint]
-    centroids: List[ClusterPoint]
-    point_to_centroid_mappings: Dict[int, int]
+    
+    name: str
+    cluster: List[Cluster]
     x_label: str
     y_label: str

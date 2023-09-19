@@ -107,9 +107,11 @@ def perform_clustering(data_frame: pd.DataFrame, n_clusters: int) -> dict:
         "name": "K-Means Clustering Ergebnis",
         "cluster": clusters,
         "x_label": data_frame.columns[0],
-        "y_label": data_frame.columns[1]
+        "y_label": data_frame.columns[1],
+        "iterations": kmeans.n_iter_ 
     }
     return response_data
+
 
 
 def delete_file(file_path: str):

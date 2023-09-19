@@ -45,9 +45,11 @@ class ClusterResult(BaseModel):
     - cluster (List[Cluster]): Liste von Clustern.
     - x_label (str): Label für die X-Achse.
     - y_label (str): Label für die Y-Achse.
+    - iterations (int): Anzahl der Iterationen des Clustering-Algoritmus.
     """
     
     name: str
     cluster: List[Cluster]
     x_label: str
     y_label: str
+    iterations: int 

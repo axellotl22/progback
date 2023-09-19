@@ -65,7 +65,8 @@ async def perform_kmeans_clustering(
             name=f"K-Means Ergebnis von: {os.path.splitext(file.filename)[0]}",
             cluster=clustering_results["cluster"],
             x_label=clustering_results["x_label"],
-            y_label=clustering_results["y_label"]
+            y_label=clustering_results["y_label"],
+            iterations=clustering_results["iterations"]
         )
 
     except ValueError as error:

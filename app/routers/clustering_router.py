@@ -3,7 +3,7 @@
 import os
 import logging
 
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.models.clustering_model import ClusterResult

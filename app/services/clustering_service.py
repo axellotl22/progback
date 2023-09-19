@@ -1,6 +1,4 @@
-"""
-Dienste für Clustering-Funktionen.
-"""
+""" Dienste für Clustering-Funktionen. """
 
 import logging
 

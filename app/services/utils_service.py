@@ -1,54 +1,90 @@
+"""
+Dieses Modul bietet Funktionen zum Laden, Bereinigen und Verarbeiten von Datenframes.
+"""
+
 import logging
 import os
 import pandas as pd
 from typing import List
 
-# Logging-Einstellungen
-logging.basicConfig(level=logging.INFO)
+# Konstanten in Großbuchstaben
+CSV = '.csv'
+XLSX = '.xlsx' 
+XLS = '.xls'
+JSON = '.json'
+PARQUET = '.parquet'
+
+# Logging konfigurieren
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 def load_dataframe(file_path: str) -> pd.DataFrame:
+    """Lädt Datei in Pandas DataFrame.
+
+    Args:
+        file_path (str): Dateipfad
+
+    Returns:
+        pd.DataFrame: DataFrame der geladenen Daten
+    
+    Raises:
+        ValueError: Falls Dateityp nicht unterstützt wird
     """
-    Lädt eine Datei in ein Pandas DataFrame.
-    """
-    if file_path.endswith('.csv'):
+    if file_path.endswith(CSV):
         return pd.read_csv(file_path)
-    if file_path.endswith('.xlsx') or file_path.endswith('.xls'):
+    
+    if file_path.endswith(XLSX) or file_path.endswith(XLS):
         return pd.read_excel(file_path)
-    if file_path.endswith('.json'):
+
+    if file_path.endswith(JSON):
         return pd.read_json(file_path)
-    if file_path.endswith('.parquet'):
+
+    if file_path.endswith(PARQUET):
         return pd.read_parquet(file_path)
 
-    raise ValueError(
-        f"Unsupported file type: {os.path.splitext(file_path)[1]}")
+    raise ValueError(f"Unsupported file type: {os.path.splitext(file_path)[1]}")
 
 def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
-    """
-    Bereinigt das DataFrame von leeren und unvollständigen Zeilen.
+    """Entfernt leere und unvollständige Zeilen.
+
+    Args:
+        data_frame (pd.DataFrame): zu bereinigendes DataFrame
+
+    Returns:
+        pd.DataFrame: bereinigtes DataFrame
     """
     return data_frame.dropna()
 
 def select_columns(data_frame: pd.DataFrame, columns: List[int]) -> pd.DataFrame:
-    """
-    Wählt bestimmte Spalten aus einem DataFrame aus basierend auf deren Index.
+    """Wählt Spalten anhand ihrer Indizes aus.
+
+    Args:
+        data_frame (pd.DataFrame): DataFrame
+        columns (List[int]): Liste der auszuwählenden Spaltenindizes
+
+    Returns:
+        pd.DataFrame: DataFrame mit ausgewählten Spalten
+    
+    Raises:
+        ValueError: Falls ungültiger Spaltenindex
     """
     if any(col_idx >= len(data_frame.columns) for col_idx in columns):
-        raise ValueError(
-            f"Ungültiger Spaltenindex. Das DataFrame hat nur {len(data_frame.columns)} Spalten.")
+        raise ValueError(f"Invalid column index. DataFrame has only {len(data_frame.columns)} columns.")
 
-    selected_columns = [data_frame.columns[idx] for idx in columns]
-    return data_frame[selected_columns]
+    selected_cols = [data_frame.columns[idx] for idx in columns]
+    return data_frame[selected_cols]
 
 def delete_file(file_path: str):
-    """
-    Löscht die angegebene Datei.
+    """Löscht angegebene Datei.
+
+    Args:
+        file_path (str): Dateipfad
     """
     try:
         if os.environ.get("TEST_MODE") != "True":
             os.remove(file_path)
-            logging.info("File %s successfully deleted.", file_path)
+            logger.info("File %s successfully deleted.", file_path)
     except FileNotFoundError:
-        logging.warning("File %s was already deleted.", file_path)
-    except OSError as error:
-        logging.error("Error deleting file %s: %s", file_path, error)
-
+         logger.warning("File %s already deleted.", file_path)
+    except OSError as err:
+         logger.error("Error deleting %s: %s", file_path, err)

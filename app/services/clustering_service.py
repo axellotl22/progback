@@ -33,7 +33,7 @@ def determine_optimal_clusters(data_frame):
 
     logger.info("Starting to determine the optimal number of clusters.")
 
-    max_clusters = min(int(0.2 * data_frame.shape[0]), 30)
+    max_clusters = int(0.5 * data_frame.shape[0])
     logger.info("Max clusters set to: %s", max_clusters)
 
     results = Parallel(n_jobs=-1)(delayed(cluster_and_score)
@@ -53,7 +53,7 @@ def determine_optimal_clusters(data_frame):
 
 
 def perform_clustering(data_frame, n_clusters, distance_metric="EUCLIDEAN"):
-    """Führt das Clustering mit gegebenen Parametern durch und gibt die Ergebnisse zurück."""
+    """Führt das Clustering mit gegebenen Parametern durch und gibt die Ergebnisse und Metriken zurück."""
 
     logger.info("Starting clustering with %s clusters and %s distance metric.",
                 n_clusters, distance_metric)
@@ -61,16 +61,20 @@ def perform_clustering(data_frame, n_clusters, distance_metric="EUCLIDEAN"):
     kmeans = CustomKMeans(n_clusters=n_clusters,
                           distance_metric=distance_metric)
     kmeans.fit(data_frame.values)
+    labels = kmeans.labels_
 
+    # Clustering-Metriken berechnen
+    sil_score = silhouette_score(data_frame, labels)
+    dbi_score = davies_bouldin_score(data_frame, labels)
+    
     clusters = []
     for idx in range(n_clusters):
         cluster_points = [{"x": point[0], "y": point[1]}
-                          for point, label in zip(data_frame.values, kmeans.labels_)
+                          for point, label in zip(data_frame.values, labels)
                           if label == idx]
-        centroid = {"x": kmeans.cluster_centers_[
-            idx][0], "y": kmeans.cluster_centers_[idx][1]}
-        clusters.append(
-            {"clusterNr": idx, "centroid": centroid, "points": cluster_points})
+        centroid = {"x": kmeans.cluster_centers_[idx][0], 
+                    "y": kmeans.cluster_centers_[idx][1]}
+        clusters.append({"clusterNr": idx, "centroid": centroid, "points": cluster_points})
 
     response_data = {
         "name": "K-Means Clustering Ergebnis",
@@ -78,7 +82,9 @@ def perform_clustering(data_frame, n_clusters, distance_metric="EUCLIDEAN"):
         "x_label": data_frame.columns[0],
         "y_label": data_frame.columns[1],
         "distance_metric": distance_metric,
-        "iterations": kmeans.iterations_
+        "iterations": kmeans.iterations_,
+        "silhouette_score": sil_score,
+        "davies_bouldin_index": dbi_score
     }
 
     logger.info("Clustering completed successfully.")

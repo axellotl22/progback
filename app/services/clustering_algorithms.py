@@ -10,6 +10,10 @@ def euclidean_distance(point_a, point_b):
     """Berechne den euklidischen Abstand zwischen zwei Punkten."""
     return np.sqrt(np.sum((point_a - point_b) ** 2))
 
+def squared_euclidean_distance(point_a, point_b):
+    """Berechne den quadratischen euklidischen Abstand zwischen zwei Punkten."""
+    return np.sum((point_a - point_b) ** 2)
+
 def manhattan_distance(point_a, point_b):
     """Berechne den Manhattan Abstand zwischen zwei Punkten."""
     return np.sum(np.abs(point_a - point_b))
@@ -18,13 +22,34 @@ def chebyshev_distance(point_a, point_b):
     """Berechne den Chebyshev Abstand zwischen zwei Punkten."""
     return np.max(np.abs(point_a - point_b))
 
-def minkowski_distance(point_a, point_b, p_value=2):
-    """Berechne den Minkowski Abstand zwischen zwei Punkten."""
-    return np.sum(np.abs(point_a - point_b) ** p_value) ** (1 / p_value)
+def canberra_distance(point_a, point_b):
+    """Berechne den Canberra Abstand zwischen zwei Punkten."""
+    return np.sum(np.abs(point_a - point_b) / (np.abs(point_a) + np.abs(point_b)))
+
+def chi_square_distance(point_a, point_b):
+    """Berechne den Chi-Quadrat Abstand zwischen zwei Punkten."""
+    return 0.5 * np.sum((point_a - point_b) ** 2 / (point_a + point_b + 1e-10))
+
+def jaccards_distance(point_a, point_b):
+    """Berechne den Jaccard Abstand zwischen zwei Punkten."""
+    intersection = np.minimum(point_a, point_b).sum()
+    union = np.maximum(point_a, point_b).sum()
+    return 1 - (intersection / union)
 
 class CustomKMeans:
     """Implementiere KMeans Clustering mit verschiedenen Distanzmaßen."""
-    
+
+    # Klassenvariable für unterstützte Distanzmetriken
+    SUPPORTED_DISTANCE_METRICS = {
+        "EUCLIDEAN": euclidean_distance,
+        "SQUARED_EUCLIDEAN": squared_euclidean_distance,
+        "MANHATTAN": manhattan_distance,
+        "CHEBYSHEV": chebyshev_distance,
+        "CANBERRA": canberra_distance,
+        "CHI_SQUARE": chi_square_distance,
+        "JACCARDS": jaccards_distance
+    }
+
     def __init__(self, n_clusters, distance_metric="EUCLIDEAN", max_iter=300, tol=1e-4):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
@@ -33,15 +58,8 @@ class CustomKMeans:
         self.labels_ = None
         self.iterations_ = 0
 
-        # Wähle die Distanz-Funktion basierend auf dem gegebenen Distanzmaß
-        distance_metrics = {
-            "EUCLIDEAN": euclidean_distance,
-            "MANHATTAN": manhattan_distance,
-            "CHEBYSHEV": chebyshev_distance,
-            "MINKOWSKI": minkowski_distance
-        }
-        
-        self.distance = distance_metrics.get(distance_metric)
+        # Wähle die Distanz-Funktion basierend auf dem gegebenen Distanzmaß von der Klassenvariable
+        self.distance = self.SUPPORTED_DISTANCE_METRICS.get(distance_metric)
         if self.distance is None:
             raise ValueError(f"Unbekanntes Distanzmaß: {distance_metric}")
 

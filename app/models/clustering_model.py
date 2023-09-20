@@ -48,12 +48,12 @@ class ClusterResult(BaseModel):
     - y_label (str): Label für die Y-Achse.
     - iterations (int): Anzahl der Iterationen des Clustering-Algoritmus.
     - distance_metric (DistanceMetric): Das verwendete Distanzmaß.
-    - distance_description (str): Beschreibung des Distanzmaßes.
-    - distance_formula (str): Mathematische Formel des Distanzmaßes.
     """
     name: str
     cluster: List[Cluster]
     x_label: str
     y_label: str
     iterations: int 
-    distance_metric: str      
+    distance_metric: str
+    silhouette_score : float
+    davies_bouldin_index: float    

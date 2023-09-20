@@ -56,6 +56,11 @@ def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: bereinigtes DataFrame
     """
+    # wenn eine Spalte nur 2 distincte werte hat in Bool konvertieren
+    for col in data_frame.columns:
+        if len(data_frame[col].unique()) == 2:
+            data_frame[col] = data_frame[col].astype(bool)
+    
     return data_frame.dropna()
 
 

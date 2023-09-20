@@ -14,7 +14,7 @@ from app.services.clustering_service import (
     determine_optimal_clusters, perform_clustering
 )
 
-from app.services.utils_service import (
+from app.services.utils import (
     load_dataframe, clean_dataframe, select_columns, delete_file)
 
 TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"

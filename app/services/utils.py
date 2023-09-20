@@ -4,12 +4,12 @@ Dieses Modul bietet Funktionen zum Laden, Bereinigen und Verarbeiten von Datenfr
 
 import logging
 import os
-import pandas as pd
 from typing import List
+import pandas as pd
 
 # Konstanten in Großbuchstaben
 CSV = '.csv'
-XLSX = '.xlsx' 
+XLSX = '.xlsx'
 XLS = '.xls'
 JSON = '.json'
 PARQUET = '.parquet'
@@ -17,6 +17,7 @@ PARQUET = '.parquet'
 # Logging konfigurieren
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
 
 def load_dataframe(file_path: str) -> pd.DataFrame:
     """Lädt Datei in Pandas DataFrame.
@@ -26,13 +27,13 @@ def load_dataframe(file_path: str) -> pd.DataFrame:
 
     Returns:
         pd.DataFrame: DataFrame der geladenen Daten
-    
+
     Raises:
         ValueError: Falls Dateityp nicht unterstützt wird
     """
     if file_path.endswith(CSV):
         return pd.read_csv(file_path)
-    
+
     if file_path.endswith(XLSX) or file_path.endswith(XLS):
         return pd.read_excel(file_path)
 
@@ -42,7 +43,9 @@ def load_dataframe(file_path: str) -> pd.DataFrame:
     if file_path.endswith(PARQUET):
         return pd.read_parquet(file_path)
 
-    raise ValueError(f"Unsupported file type: {os.path.splitext(file_path)[1]}")
+    raise ValueError(
+        f"Unsupported file type: {os.path.splitext(file_path)[1]}")
+
 
 def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
     """Entfernt leere und unvollständige Zeilen.
@@ -55,6 +58,7 @@ def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
     """
     return data_frame.dropna()
 
+
 def select_columns(data_frame: pd.DataFrame, columns: List[int]) -> pd.DataFrame:
     """Wählt Spalten anhand ihrer Indizes aus.
 
@@ -64,15 +68,17 @@ def select_columns(data_frame: pd.DataFrame, columns: List[int]) -> pd.DataFrame
 
     Returns:
         pd.DataFrame: DataFrame mit ausgewählten Spalten
-    
+
     Raises:
         ValueError: Falls ungültiger Spaltenindex
     """
     if any(col_idx >= len(data_frame.columns) for col_idx in columns):
-        raise ValueError(f"Invalid column index. DataFrame has only {len(data_frame.columns)} columns.")
+        raise ValueError(
+            f"Invalid column index. DataFrame has only {len(data_frame.columns)} columns.")
 
     selected_cols = [data_frame.columns[idx] for idx in columns]
     return data_frame[selected_cols]
+
 
 def delete_file(file_path: str):
     """Löscht angegebene Datei.
@@ -85,6 +91,15 @@ def delete_file(file_path: str):
             os.remove(file_path)
             logger.info("File %s successfully deleted.", file_path)
     except FileNotFoundError:
-         logger.warning("File %s already deleted.", file_path)
+        logger.warning("File %s already deleted.", file_path)
     except OSError as err:
-         logger.error("Error deleting %s: %s", file_path, err)
+        logger.error("Error deleting %s: %s", file_path, err)
+
+def save_temp_file(file, directory):
+    """Speichert eine temporäre Datei und gibt den Pfad zurück."""
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    file_path = os.path.join(directory, file.filename)
+    with open(file_path, "wb") as buffer:
+        buffer.write(file.file.read())
+    return file_path

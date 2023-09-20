@@ -5,27 +5,26 @@ Implementierung von K-Means Clustering mit benutzerdefinierten Distanzmetriken.
 import numpy as np
 from sklearn.cluster import KMeans
 
-
 # Distanz-Funktionen
-def euclidean_distance(x, y):
-    return np.sqrt(np.sum((x - y) ** 2))
+def euclidean_distance(point_a, point_b):
+    """Berechne den euklidischen Abstand zwischen zwei Punkten."""
+    return np.sqrt(np.sum((point_a - point_b) ** 2))
 
+def manhattan_distance(point_a, point_b):
+    """Berechne den Manhattan Abstand zwischen zwei Punkten."""
+    return np.sum(np.abs(point_a - point_b))
 
-def manhattan_distance(x, y):
-    return np.sum(np.abs(x - y))
+def chebyshev_distance(point_a, point_b):
+    """Berechne den Chebyshev Abstand zwischen zwei Punkten."""
+    return np.max(np.abs(point_a - point_b))
 
-
-def chebyshev_distance(x, y):
-    return np.max(np.abs(x - y))
-
-
-def minkowski_distance(x, y, p=2):
-    return np.sum(np.abs(x - y) ** p) ** (1 / p)
-
-# Custom KMeans mit Unterstützung für verschiedene Distanzmaße
-
+def minkowski_distance(point_a, point_b, p_value=2):
+    """Berechne den Minkowski Abstand zwischen zwei Punkten."""
+    return np.sum(np.abs(point_a - point_b) ** p_value) ** (1 / p_value)
 
 class CustomKMeans:
+    """Implementiere KMeans Clustering mit verschiedenen Distanzmaßen."""
+    
     def __init__(self, n_clusters, distance_metric="EUCLIDEAN", max_iter=300, tol=1e-4):
         self.n_clusters = n_clusters
         self.max_iter = max_iter
@@ -34,31 +33,33 @@ class CustomKMeans:
         self.labels_ = None
         self.iterations_ = 0
 
-        if distance_metric == "EUCLIDEAN":
-            self.distance = euclidean_distance
-        elif distance_metric == "MANHATTAN":
-            self.distance = manhattan_distance
-        elif distance_metric == "CHEBYSHEV":
-            self.distance = chebyshev_distance
-        elif distance_metric == "MINKOWSKI":
-            self.distance = minkowski_distance
-        else:
+        # Wähle die Distanz-Funktion basierend auf dem gegebenen Distanzmaß
+        distance_metrics = {
+            "EUCLIDEAN": euclidean_distance,
+            "MANHATTAN": manhattan_distance,
+            "CHEBYSHEV": chebyshev_distance,
+            "MINKOWSKI": minkowski_distance
+        }
+        
+        self.distance = distance_metrics.get(distance_metric)
+        if self.distance is None:
             raise ValueError(f"Unbekanntes Distanzmaß: {distance_metric}")
 
-    def fit(self, X):
-        kmeans = KMeans(n_clusters=self.n_clusters,
-                        init='k-means++', max_iter=1, n_init=1)
-        kmeans.fit(X)
+    def fit(self, data_points):
+        """Trainiere das Modell mit den gegebenen Daten."""
+        kmeans = KMeans(n_clusters=self.n_clusters, init='k-means++', max_iter=1, n_init=1)
+        kmeans.fit(data_points)
         self.cluster_centers_ = kmeans.cluster_centers_
 
         for iteration in range(self.max_iter):
-            dists = np.array([[self.distance(x, center)
-                             for center in self.cluster_centers_] for x in X])
+            dists = np.array([[self.distance(point, center)
+                             for center in self.cluster_centers_] for point in data_points])
             labels = np.argmin(dists, axis=1)
 
-            new_centers = np.array([X[labels == i].mean(axis=0)
+            new_centers = np.array([data_points[labels == i].mean(axis=0)
                                    for i in range(self.n_clusters)])
 
+            # Überprüfung, ob die Konvergenz erreicht ist
             if np.all(np.abs(new_centers - self.cluster_centers_) < self.tol):
                 self.labels_ = labels
                 break
@@ -67,3 +68,22 @@ class CustomKMeans:
             self.labels_ = labels
 
         self.iterations_ = iteration + 1
+        
+    def average_distance_to_centers(self, data_points):
+        """Berechne den durchschnittlichen Abstand aller Datenpunkte zu ihren Clusterzentren."""
+        if self.cluster_centers_ is None or self.labels_ is None:
+            raise ValueError("Das Modell muss zuerst mit 'fit' trainiert werden.")
+
+        total_distance = 0
+
+        # Wenn der euklidische Abstand als Standard gesetzt ist
+        if self.distance is None:
+            for point, label in zip(data_points, self.labels_):
+                center = self.cluster_centers_[label]
+                total_distance += np.sqrt(np.sum((point - center) ** 2))
+        else:
+            for point, label in zip(data_points, self.labels_):
+                center = self.cluster_centers_[label]
+                total_distance += self.distance(point, center)
+
+        return total_distance / len(data_points)

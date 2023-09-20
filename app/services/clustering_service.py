@@ -53,7 +53,9 @@ def determine_optimal_clusters(data_frame):
 
 
 def perform_clustering(data_frame, n_clusters, distance_metric="EUCLIDEAN"):
-    """Führt das Clustering mit gegebenen Parametern durch und gibt die Ergebnisse und Metriken zurück."""
+    """ Führt das Clustering mit gegebenen Parametern durch 
+        und gibt die Ergebnisse und Metriken zurück.
+    """
 
     logger.info("Starting clustering with %s clusters and %s distance metric.",
                 n_clusters, distance_metric)

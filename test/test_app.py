@@ -38,10 +38,10 @@ class TestApp:
 
     def test_basic(self):
         """Teste den Endpoint mit allen Parametern."""
-        with open(BASIC_TEST_FILE, "rb") as f:
+        with open(BASIC_TEST_FILE, "rb") as file:
             response = client.post(
                 ENDPOINT_URL,
-                files={"file": f}
+                files={"file": file}
             )
         assert response.status_code == 200
         assert "name" in response.json()
@@ -49,12 +49,12 @@ class TestApp:
 
     def test_advanced(self):
         """Teste den Endpoint mit verschiedenen Kombinationen von Parametern."""
-        with open(ADVANCED_TEST_FILE, "rb") as f:
+        with open(ADVANCED_TEST_FILE, "rb") as file:
             # Ohne Clusterangabe aber mit Distanzangabe
             response_1 = client.post(
                 ENDPOINT_URL,
-                files={"file": f},
-                data={"column1": 4, 
+                files={"file": file},
+                data={"column1": 4,
                       "column2": 5, 
                       "distanceMetric": "JACCARDS"}
             )

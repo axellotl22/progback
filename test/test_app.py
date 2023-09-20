@@ -9,7 +9,7 @@ from app.main import app
 from app.services.clustering_service import (
     determine_optimal_clusters, perform_clustering
 )
-from app.services.utils_service import (
+from progback.app.services.utils import (
     load_dataframe, clean_dataframe, select_columns
 )
 

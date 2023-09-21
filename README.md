@@ -35,7 +35,7 @@ Progback/
 │ ├── models/                     # Datenmodelle und -schemata
 │ │ ├── clustering_model.py       # Modelle für Eingabe-/Ausgabedaten
 │ ├── services/                   # Dienstprogramme und Services
-│ │ ├── clustering_algorithms.py  # Modifizierter K-Means mit EUCLIDEAN, MANHATTAN, CHEBYSHEV & MINKOWSKI
+│ │ ├── clustering_algorithms.py  # Modifizierter K-Means mit variabler Ditanzberechnung
 │ │ ├── clustering_service.py     # Dienstprogramme für KMeans-Clustering 
 │ │ ├── utils_service.py          # Hilfsprogramme
 │ │   
@@ -129,31 +129,38 @@ Beispiel bei lokaler ausführung:
 
 Die API antwortet mit einem JSON-Objekt, das Folgendes enthält:
 
-- **points**: Die geclusterten Datenpunkte mit Koordinaten und Cluster.
-- **centroids**: Die Koordinaten der generierten Cluster-Zentroids.
-- **point_to_centroid_mappings**: Eine Abbildung von Punkten zu ihrem zugehörigen Zentroid.
+- **name**: Name der Ausgabe
+- **cluster**: Eine Liste mit Clustern, die wiederum eine Liste mit den zugehörigen Datenpunkten enthalten
+- **x_label**: Name der X-Achse
+- **y_label**: Name der Y-Achse
+- **iterations**: Anzahl der Iterationen, die für das Clustering benötigt wurden
+- **distance_metric**: Die verwendete Distanzmetrik
+- **silhouette_score**: Der Silhouettenkoeffizient
+- **davies_bouldin_index**: Der Davies-Bouldin-Index
 
 ```json  
 {
-  "points": [
+  "name": "string",
+  "cluster": [
     {
-      "x": 0,
-      "y": 0,
-      "cluster": 0
+      "clusterNr": 0,
+      "centroid": {
+        "x": 0,
+        "y": 0
+      },
+      "points": [
+        {
+          "additionalProp1": 0,
+          "additionalProp2": 0,
+          "additionalProp3": 0
+        }
+      ]
     }
   ],
-  "centroids": [
-    {
-      "x": 0,
-      "y": 0,
-      "cluster": 0
-    }
-  ],
-  "point_to_centroid_mappings": {
-    "additionalProp1": 0,
-    "additionalProp2": 0,
-    "additionalProp3": 0
-  },
   "x_label": "string",
-  "y_label": "string"
+  "y_label": "string",
+  "iterations": 0,
+  "distance_metric": "string",
+  "silhouette_score": 0,
+  "davies_bouldin_index": 0
 }

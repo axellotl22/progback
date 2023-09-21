@@ -1,5 +1,17 @@
 FROM python:3.10-slim
 
+ARG STABILITY="stable"
+ENV STABILITY ${STABILITY}
+
+ARG D_DB_HOST=""
+ARG D_DB_PORT=""
+ARG D_DB_PW=""
+ARG D_DB_SCHEMA=""
+ENV D_DB_HOST ${D_DB_HOST}
+ENV D_DB_PORT ${D_DB_PORT}
+ENV D_DB_PW ${D_DB_PW}
+ENV D_DB_SCHEMA ${D_DB_SCHEMA}
+
 # Setzen der Umgebungsvariablen, um Python davon abzuhalten, .pyc-Dateien im Container zu generieren
 # und das Puffering zu deaktivieren, um das Container-Logging zu erleichtern
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1

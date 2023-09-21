@@ -4,6 +4,9 @@ Hauptmodul der App.
 
 from fastapi import FastAPI
 from app.routers import clustering_router
+from app.database.connection import get_database_url
+
+engine = get_database_url()
 
 app = FastAPI()
 

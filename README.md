@@ -68,11 +68,11 @@ Docker ermöglicht es Ihnen, Ihre Anwendung in einem isolierten Container auszuf
 1. Erstellen Sie das Docker-Image:
 
    ```bash
-   docker build -t clustering-api --build-arg DEV_MODE=true .
+   docker build -t clustering-api --build-arg DEV_MODE=True .
 2. Starten Sie den Container:
 
     ```bash
-    docker run -p 8080:8080 clustering-api
+    docker run -p 8080:8080 --env-file .env clustering-api
     ```
 
 
@@ -81,7 +81,7 @@ Docker Compose ermöglicht die Definition und den Betrieb von Multi-Container Do
 
 ```bash
 # Erstellen Sie die Docker-Images und starten Sie die Container
-docker-compose up --build
+docker-compose --env-file .env up --build
 ```
 
 

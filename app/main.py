@@ -6,7 +6,9 @@ from fastapi import FastAPI
 from app.routers import clustering_router
 from app.database.connection import get_database_url
 
-engine = get_database_url()
+database_url = get_database_url()
+
+print(database_url)
 
 app = FastAPI()
 

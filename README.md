@@ -68,7 +68,7 @@ Docker ermöglicht es Ihnen, Ihre Anwendung in einem isolierten Container auszuf
 1. Erstellen Sie das Docker-Image:
 
    ```bash
-   docker build -t clustering-api --build-arg STABILITY="dev" .
+   docker build -t clustering-api --build-arg DEV_MODE=true .
 2. Starten Sie den Container:
 
     ```bash

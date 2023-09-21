@@ -13,3 +13,4 @@ httpx
 gap-stat
 SQLAlchemy
 fastapi-users[sqlalchemy]
+matplotlib

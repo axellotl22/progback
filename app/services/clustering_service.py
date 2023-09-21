@@ -33,7 +33,7 @@ def determine_optimal_clusters(data_frame):
 
     logger.info("Starting to determine the optimal number of clusters.")
 
-    max_clusters = int(0.5 * data_frame.shape[0])
+    max_clusters = min(int(0.25 * data_frame.shape[0]), 50)
     logger.info("Max clusters set to: %s", max_clusters)
 
     results = Parallel(n_jobs=-1)(delayed(cluster_and_score)

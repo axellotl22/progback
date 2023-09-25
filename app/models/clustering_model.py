@@ -49,11 +49,14 @@ class ClusterResult(BaseModel):
     - iterations (int): Anzahl der Iterationen des Clustering-Algoritmus.
     - distance_metric (DistanceMetric): Das verwendete Distanzmaß.
     """
+    user_id: int
+    request_id: int
     name: str
     cluster: List[Cluster]
     x_label: str
     y_label: str
     iterations: int 
-    distance_metric: str
-    silhouette_score : float
-    davies_bouldin_index: float    
+    used_distance_metric: str
+    used_optK_method:str
+    clusters_elbow: int
+    clusters_silhouette: int

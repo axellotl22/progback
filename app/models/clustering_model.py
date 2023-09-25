@@ -11,7 +11,7 @@ class FileUpload(BaseModel):
     Attribute:
     - filename (str): Name der hochgeladenen Datei
     """
-    
+
     filename: str
 
 
@@ -23,7 +23,7 @@ class Centroid(BaseModel):
     - x (float): X-Koordinate des Zentroiden
     - y (float): Y-Koordinate des Zentroiden
     """
-    
+
     x: float
     y: float
 
@@ -37,9 +37,9 @@ class Cluster(BaseModel):
     - centroid (Centroid): Zentroid des Clusters
     - points (List[Dict[str, float]]): Liste von Punkten innerhalb des Clusters
     """
-    
+
     clusterNr: int
-    centroid: Centroid 
+    centroid: Centroid
     points: List[Dict[str, float]]
 
 
@@ -60,9 +60,9 @@ class ClusterResult(BaseModel):
     - clusters_elbow (int): Anzahl Cluster (Elbow-Methode)
     - clusters_silhouette (int): Anzahl Cluster (Silhouette-Methode) 
     """
-    
+
     user_id: int
-    request_id: int 
+    request_id: int
     name: str
     cluster: List[Cluster]
     x_label: str

@@ -1,36 +1,37 @@
 """
-Dieses Modul bietet Funktionen zum Laden, Bereinigen und Verarbeiten von Datenframes.
+This module provides functions for loading, cleaning and processing dataframes.
 """
 
 import logging
 import os
 from typing import List
+
 import pandas as pd
 
-# Konstanten in Großbuchstaben
+# Constants in uppercase
 CSV = '.csv'
 XLSX = '.xlsx'
 XLS = '.xls'
 JSON = '.json'
-PARQUET = '.parquet'
 
-# Logging konfigurieren
+# Configure logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
 def load_dataframe(file_path: str) -> pd.DataFrame:
-    """Lädt Datei in Pandas DataFrame.
+    """Loads file into a Pandas DataFrame.
 
     Args:
-        file_path (str): Dateipfad
+        file_path (str): File path
 
     Returns:
-        pd.DataFrame: DataFrame der geladenen Daten
+        pd.DataFrame: DataFrame of loaded data
 
     Raises:
-        ValueError: Falls Dateityp nicht unterstützt wird
+        ValueError: If file type is not supported
     """
+    # Load dataframe based on file type
     if file_path.endswith(CSV):
         return pd.read_csv(file_path)
 
@@ -40,71 +41,88 @@ def load_dataframe(file_path: str) -> pd.DataFrame:
     if file_path.endswith(JSON):
         return pd.read_json(file_path)
 
-    if file_path.endswith(PARQUET):
-        return pd.read_parquet(file_path)
-
-    raise ValueError(
-        f"Unsupported file type: {os.path.splitext(file_path)[1]}")
+    raise ValueError(f"Unsupported file type: {os.path.splitext(file_path)[1]}")
 
 
 def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
-    """Entfernt leere und unvollständige Zeilen.
+    """Removes empty and incomplete rows.
 
     Args:
-        data_frame (pd.DataFrame): zu bereinigendes DataFrame
+        data_frame (pd.DataFrame): DataFrame to clean
 
     Returns:
-        pd.DataFrame: bereinigtes DataFrame
+        pd.DataFrame: Cleaned dataframe
     """
-    # wenn eine Spalte nur 2 distincte werte hat in Bool konvertieren
+
+    # Convert columns with only 2 unique values to bool
     for col in data_frame.columns:
         if len(data_frame[col].unique()) == 2:
             data_frame[col] = data_frame[col].astype(bool)
-    
+
+    # Drop empty rows
     return data_frame.dropna()
 
 
 def select_columns(data_frame: pd.DataFrame, columns: List[int]) -> pd.DataFrame:
-    """Wählt Spalten anhand ihrer Indizes aus.
+    """Selects columns by their indices.
 
     Args:
         data_frame (pd.DataFrame): DataFrame
-        columns (List[int]): Liste der auszuwählenden Spaltenindizes
+        columns (List[int]): List of column indices  
 
     Returns:
-        pd.DataFrame: DataFrame mit ausgewählten Spalten
+        pd.DataFrame: DataFrame with selected columns
 
     Raises:
-        ValueError: Falls ungültiger Spaltenindex
+        ValueError: If invalid column index
     """
+    # Validate column indices
     if any(col_idx >= len(data_frame.columns) for col_idx in columns):
         raise ValueError(
             f"Invalid column index. DataFrame has only {len(data_frame.columns)} columns.")
 
+    # Select columns by index
     selected_cols = [data_frame.columns[idx] for idx in columns]
     return data_frame[selected_cols]
 
 
 def delete_file(file_path: str):
-    """Löscht angegebene Datei.
+    """Deletes specified file.
 
     Args:
-        file_path (str): Dateipfad
+        file_path (str): File path
     """
     try:
         if os.environ.get("TEST_MODE") != "True":
+
+            # Actually delete file
             os.remove(file_path)
+
             logger.info("File %s successfully deleted.", file_path)
+
     except FileNotFoundError:
+
+        # File already deleted
         logger.warning("File %s already deleted.", file_path)
+
     except OSError as err:
+
+        # Handle other errors
         logger.error("Error deleting %s: %s", file_path, err)
 
+
 def save_temp_file(file, directory):
-    """Speichert eine temporäre Datei und gibt den Pfad zurück."""
+    """Saves a temporary file and returns the path."""
+
+    # Create directory if needed
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+    # Generate file path
     file_path = os.path.join(directory, file.filename)
+
+    # Write file contents
     with open(file_path, "wb") as buffer:
         buffer.write(file.file.read())
+
     return file_path

@@ -11,3 +11,4 @@ fastapi[test]
 python-multipart
 httpx
 gap-stat
+joblib

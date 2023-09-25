@@ -1,84 +1,100 @@
-""" Router für Clustering-Endpunkte. """
+"""Router for clustering endpoints."""
 
 import os
 import logging
+from typing import Optional, Union
 
-from typing import Optional, List, Union
+from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from app.models.clustering_model import ClusterResult, ClusterPoint
-from app.services.clustering_service import (
-    load_dataframe, clean_dataframe, select_columns, determine_optimal_clusters,
-    perform_clustering, delete_file, process_columns_input
+from app.models.clustering_model import ClusterResult
+from app.services.clustering_service import process_and_cluster
+from app.services.utils import (
+    load_dataframe, delete_file, save_temp_file
 )
+from app.services.clustering_algorithms import CustomKMeans
 
 TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"
 TEMP_FILES_DIR = "temp_files/"
 
 router = APIRouter()
 
+
 @router.post("/perform-kmeans-clustering/", response_model=ClusterResult)
+# pylint: disable=too-many-arguments
 async def perform_kmeans_clustering(
     file: UploadFile = File(...),
-    clusters: Optional[int] = None,
-    columns: Optional[Union[str, List[int]]] = None
+    column1: Optional[Union[str, int]] = None,
+    column2: Optional[Union[str, int]] = None,
+    k_cluster: Optional[int] = Query(
+        None, alias="kCluster", description="Number of clusters"
+    ),
+    distance_metric: Optional[str] = Query(
+        "EUCLIDEAN", alias="distanceMetric",
+        description=", ".join(CustomKMeans.supported_distance_metrics.keys())
+    ),
+    cluster_count_determination: Optional[str] = Query(
+        "ELBOW", alias="clusterDetermination",
+        description="ELBOW, SILHOUETTE"
+    )
 ):
     """
-    Dieser Endpunkt verarbeitet die hochgeladene Datei und gibt 
-    die Clustering-Ergebnisse zurück. Der Benutzer kann optional 
-    die Anzahl der Cluster und die zu berücksichtigenden Spalten bestimmen.
+    This endpoint processes the uploaded file and returns 
+    the clustering results. User can optionally specify 
+    columns and distance metric.
     """
-    if columns:
-        columns = process_columns_input(columns)
 
-    if not os.path.exists(TEMP_FILES_DIR):
-        os.makedirs(TEMP_FILES_DIR)
+    # Validate distance metric
+    supported_metrics = list(CustomKMeans.supported_distance_metrics.keys())
+    if distance_metric not in supported_metrics:
+        error_msg = (
+            f"Invalid distance metric. Supported metrics are: "
+            f"{', '.join(supported_metrics)}"
+        )
+        raise HTTPException(400, error_msg)
 
-    file_path = os.path.join(TEMP_FILES_DIR, file.filename)
+    # Convert columns to int if given as string
+    if isinstance(column1, str):
+        column1 = int(column1)
+    if isinstance(column2, str):
+        column2 = int(column2)
 
-    with open(file_path, "wb") as buffer:
-        buffer.write(file.file.read())
+    # Determine method used
+    if k_cluster:
+        used_method = f"Manually set to {k_cluster}"
+    else:
+        used_method = cluster_count_determination
+
+    # Process file
+    columns = [column1, column2] if column1 and column2 else None
+    file_path = save_temp_file(file, TEMP_FILES_DIR)
 
     try:
         data_frame = load_dataframe(file_path)
-        data_frame = clean_dataframe(data_frame)
+        results = process_and_cluster(data_frame, cluster_count_determination,
+                                      distance_metric, columns, k_cluster)
 
-        if columns:
-            data_frame = select_columns(data_frame, columns)
-
-        if clusters is None:
-            optimal_clusters = determine_optimal_clusters(data_frame)
-        else:
-            if clusters <= 1 or clusters > len(data_frame):
-                raise HTTPException(400, "Ungültige Anzahl von Clustern")
-            optimal_clusters = clusters
-
-        clustering_results = perform_clustering(data_frame, optimal_clusters)
-
-        centroids = [
-            ClusterPoint(x=c["x"], y=c["y"], cluster=c["cluster"])
-            for c in clustering_results["centroids"]
-        ]
-        points = [
-            ClusterPoint(x=p["x"], y=p["y"], cluster=p["cluster"])
-            for p in clustering_results["points"]
-        ]
-
+        # Return clustering result model
         return ClusterResult(
-            x_label=clustering_results["x_label"],
-            y_label=clustering_results["y_label"],
-            points=points,
-            centroids=centroids,
-            point_to_centroid_mappings=clustering_results["point_to_centroid_mappings"]
+            user_id=0,
+            request_id=0,
+            name=f"K-Means Result for: {os.path.splitext(file.filename)[0]}",
+            cluster=results["cluster"],
+            x_label=results["x_label"],
+            y_label=results["y_label"],
+            iterations=results["iterations"],
+            used_distance_metric=distance_metric,
+            used_optK_method=used_method,
+            clusters_elbow=results["clusters_elbow"],
+            clusters_silhouette=results["clusters_silhouette"]
         )
 
     except ValueError as error:
-        logging.error("Fehler beim Lesen der Datei: %s", error)
-        raise HTTPException(400, "Nicht unterstützter Dateityp") from error
+        logging.error("Error reading file: %s", error)
+        raise HTTPException(400, "Unsupported file type") from error
 
     except Exception as error:
-        logging.error("Fehler bei der Dateiverarbeitung: %s", error)
-        raise HTTPException(500, "Fehler bei der Dateiverarbeitung") from error
+        logging.error("Error processing file: %s", error)
+        raise HTTPException(500, "Error processing file") from error
 
     finally:
         if not TEST_MODE:

@@ -12,3 +12,5 @@ python-multipart
 httpx
 gap-stat
 joblib
+asyncio
+websockets

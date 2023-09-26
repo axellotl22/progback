@@ -12,6 +12,8 @@ from app.services.utils import (
     load_dataframe, delete_file, save_temp_file
 )
 from app.services.clustering_algorithms import CustomKMeans
+from app.services.job_service import run_job_async, Job, jobs
+from app.models.job_model import JobInfo, JobStatus
 
 TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"
 TEMP_FILES_DIR = "temp_files/"
@@ -19,7 +21,7 @@ TEMP_FILES_DIR = "temp_files/"
 router = APIRouter()
 
 
-@router.post("/perform-kmeans-clustering/", response_model=ClusterResult)
+@router.post("/perform-kmeans-clustering/", response_model=Union[ClusterResult, JobInfo])
 # pylint: disable=too-many-arguments
 async def perform_kmeans_clustering(
     file: UploadFile = File(...),
@@ -35,7 +37,8 @@ async def perform_kmeans_clustering(
     cluster_count_determination: Optional[str] = Query(
         "ELBOW", alias="clusterDetermination",
         description="ELBOW, SILHOUETTE"
-    )
+    ),
+    force_run_as_job: Optional[bool] = False
 ):
     """
     This endpoint processes the uploaded file and returns 
@@ -70,8 +73,15 @@ async def perform_kmeans_clustering(
 
     try:
         data_frame = load_dataframe(file_path)
-        results = process_and_cluster(data_frame, cluster_count_determination,
-                                      distance_metric, columns, k_cluster)
+
+        if force_run_as_job:
+            job = Job(func=process_and_cluster, args=[data_frame, cluster_count_determination, distance_metric,
+                                                      columns, k_cluster])
+            return JobInfo(uuid=str(job.uuid), status=JobStatus.WAITING)
+        else:
+            results = await run_job_async(func=process_and_cluster,
+                                          args=[data_frame, cluster_count_determination, distance_metric, columns,
+                                                k_cluster])
 
         # Return clustering result model
         return ClusterResult(
@@ -97,5 +107,5 @@ async def perform_kmeans_clustering(
         raise HTTPException(500, "Error processing file") from error
 
     finally:
-        if not TEST_MODE:
+        if not TEST_MODE and not force_run_as_job:
             delete_file(file_path)

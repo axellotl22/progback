@@ -1,17 +1,21 @@
 FROM python:3.10-slim
 
-# Keeps Python from generating .pyc files in the container
-ENV PYTHONDONTWRITEBYTECODE=1
+# Setzen der Umgebungsvariablen, um Python davon abzuhalten, .pyc-Dateien im Container zu generieren
+# und das Puffering zu deaktivieren, um das Container-Logging zu erleichtern
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
-# Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED=1
+# Setzen des Arbeitsverzeichnis im Container
+WORKDIR /code
 
-WORKDIR code
+# Installieren der Systemabhängigkeiten
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY ./requirements.txt /code/requirements.txt
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+# Kopieren des aktuellen Verzeichnisinhalte in das Container-Verzeichnis /code
+COPY ./requirements.txt /code/
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
+# Kopieren des App-Code in den Container
 COPY ./app /code/app
 
-# Start API
+# Starten Sie die API
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

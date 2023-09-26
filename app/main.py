@@ -6,10 +6,12 @@ from fastapi import FastAPI
 from app.routers import clustering_router
 from app.database.user_db import create_db_and_tables
 from app.entitys.user import UserCreate, UserRead, UserUpdate, auth_backend, fastapi_users
+from app.routers import job_router
 
 app = FastAPI()
 
 app.include_router(clustering_router.router, prefix="/clustering", tags=["clustering"])
+app.include_router(job_router.router, prefix="/jobs", tags=["jobs"])
 
 # Authentication
 app.include_router(fastapi_users.get_auth_router(auth_backend), tags=["auth"])

@@ -1,9 +1,11 @@
+import enum
+
 from pydantic import BaseModel
-from enum import Enum
-from typing import List
+from app.services.database_service import DBBase
+from sqlalchemy import Column, Integer, String, DateTime, Enum
 
 
-class JobStatus(Enum):
+class JobStatus(enum.Enum):
     CANCELED = -2
     ERROR = -1
     WAITING = 0
@@ -11,32 +13,36 @@ class JobStatus(Enum):
     DONE = 2
 
 
-class JobInfo(BaseModel):
-    uuid: str
-    status: JobStatus
+class DBJob(DBBase):
+    __tablename__ = "jobs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False)
+    created_at = Column(DateTime, nullable=False)
+    file_name = Column(String, nullable=True)
+    file_hash = Column(String, nullable=True)
+    status = Column(Enum(JobStatus), nullable=False)
+    job_type = Column(String, nullable=False)
+    result = Column(String, nullable=True)
 
 
 class JobEntry(BaseModel):
     """
-    Ein einzelner Job
-
+    Ein Job als pydantic Modell für die Ausgabe über die API
     Attribute:
-    - uuid (str): einzigartige ID des Jobs
-    - userid (userid): ID des Benutzers, welcher den Job erstellt hat
+    - id (int): einzigartige ID des Jobs
+    - user_id (userid): ID des Benutzers, welcher den Job erstellt hat
+    - created_at (DateTime): Zeitpunkt der Erstellung des Jobs
+    - file_name (str): Name der Datei, welche bearbeitet wird/wurde
+    - file_hash (str): Hash der Datei
     - status (JobStatus): aktueller Status des Jobs
     - result (object): das Ergebnis, falls der Task fertig ist
     """
-    uuid: str
-    userid: int = 0
-    status: JobStatus
-    result: object = None
-
-
-class JobList(BaseModel):
-    """
-    Liste von allen Jobs
-
-    Attribute:
-    - jobs (List[JobEntry]): Liste von allen Jobs
-    """
-    jobs: List[JobEntry] = []
+    id: int = 0
+    user_id: int = 0
+    created_at: str = None
+    file_name: str = None
+    file_hash: str = None
+    status: JobStatus = 0
+    job_type: str = None
+    result: str = None

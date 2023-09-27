@@ -22,3 +22,4 @@ aiosqlite
 aiomysql
 asyncio
 websockets
+sqlalchemy

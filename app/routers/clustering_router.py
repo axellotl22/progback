@@ -13,7 +13,7 @@ from app.services.utils import (
 )
 from app.services.clustering_algorithms import CustomKMeans
 from app.services.job_service import run_job_async, Job, jobs
-from app.models.job_model import JobInfo, JobStatus
+from app.models.job_model import JobEntry, JobStatus
 
 TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"
 TEMP_FILES_DIR = "temp_files/"
@@ -21,7 +21,7 @@ TEMP_FILES_DIR = "temp_files/"
 router = APIRouter()
 
 
-@router.post("/perform-kmeans-clustering/", response_model=Union[ClusterResult, JobInfo])
+@router.post("/perform-kmeans-clustering/", response_model=Union[ClusterResult, JobEntry])
 # pylint: disable=too-many-arguments
 async def perform_kmeans_clustering(
     file: UploadFile = File(...),
@@ -77,7 +77,7 @@ async def perform_kmeans_clustering(
         if force_run_as_job:
             job = Job(func=process_and_cluster, args=[data_frame, cluster_count_determination, distance_metric,
                                                       columns, k_cluster])
-            return JobInfo(uuid=str(job.uuid), status=JobStatus.WAITING)
+            return JobEntry(uuid=str(job.uuid), status=JobStatus.WAITING)
         else:
             results = await run_job_async(func=process_and_cluster,
                                           args=[data_frame, cluster_count_determination, distance_metric, columns,

@@ -7,6 +7,7 @@ from app.routers import clustering_router
 from app.database.user_db import create_db_and_tables
 from app.entitys.user import UserCreate, UserRead, UserUpdate, auth_backend, fastapi_users
 from app.routers import job_router
+from app.services.database_service import DBBase, engine
 
 app = FastAPI()
 
@@ -29,3 +30,5 @@ app.include_router(fastapi_users.get_users_router(
 async def on_startup():
     """ Events on Startup """
     await create_db_and_tables()
+
+DBBase.metadata.create_all(bind=engine)

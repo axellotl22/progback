@@ -1,16 +1,14 @@
 from sqlalchemy import Column, String, create_engine, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from app.database.connection import get_database_url
+from app.database.connection import get_engine
 
 # Datenbank-Konfiguration
 Base = declarative_base()
-db_url = get_database_url()
-engine = create_engine(db_url)
+engine = get_engine()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-# Benutzermodell
 class User(Base):
     __tablename__ = "user"
     id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
@@ -24,7 +22,6 @@ session = Session(bind=engine)
 
 
 def create_user():
-    print(db_url)
-    new_user = User(username='ar', email='alex.richter39@gmail.com')
+    new_user = User(username='mh', email='moritz.holtz@hs-osnabrueck.de')
     session.add(new_user)
     session.commit()

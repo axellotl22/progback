@@ -17,11 +17,12 @@ TEMP_FILES_DIR = "temp_files/"
 
 router = APIRouter()
 
+
 @router.post("/perform-kmeans-clustering/", response_model=ClusterResult)
 async def perform_kmeans_clustering(
-    file: UploadFile = File(...),
-    clusters: Optional[int] = None,
-    columns: Optional[Union[str, List[int]]] = None
+        file: UploadFile = File(...),
+        clusters: Optional[int] = None,
+        columns: Optional[Union[str, List[int]]] = None
 ):
     """
     Dieser Endpunkt verarbeitet die hochgeladene Datei und gibt 

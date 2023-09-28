@@ -12,8 +12,6 @@ from app.services.utils import (
     load_dataframe, delete_file, save_temp_file
 )
 from app.services.clustering_algorithms import CustomKMeans
-from app.services.job_service import run_job_async, Job, jobs
-from app.models.job_model import JobEntry, JobStatus
 
 TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"
 TEMP_FILES_DIR = "temp_files/"
@@ -21,24 +19,23 @@ TEMP_FILES_DIR = "temp_files/"
 router = APIRouter()
 
 
-@router.post("/perform-kmeans-clustering/", response_model=Union[ClusterResult, JobEntry])
+@router.post("/perform-kmeans-clustering/", response_model=ClusterResult)
 # pylint: disable=too-many-arguments
 async def perform_kmeans_clustering(
-    file: UploadFile = File(...),
-    column1: Optional[Union[str, int]] = None,
-    column2: Optional[Union[str, int]] = None,
-    k_cluster: Optional[int] = Query(
-        None, alias="kCluster", description="Number of clusters"
-    ),
-    distance_metric: Optional[str] = Query(
-        "EUCLIDEAN", alias="distanceMetric",
-        description=", ".join(CustomKMeans.supported_distance_metrics.keys())
-    ),
-    cluster_count_determination: Optional[str] = Query(
-        "ELBOW", alias="clusterDetermination",
-        description="ELBOW, SILHOUETTE"
-    ),
-    force_run_as_job: Optional[bool] = False
+        file: UploadFile = File(...),
+        column1: Optional[Union[str, int]] = None,
+        column2: Optional[Union[str, int]] = None,
+        k_cluster: Optional[int] = Query(
+            None, alias="kCluster", description="Number of clusters"
+        ),
+        distance_metric: Optional[str] = Query(
+            "EUCLIDEAN", alias="distanceMetric",
+            description=", ".join(CustomKMeans.supported_distance_metrics.keys())
+        ),
+        cluster_count_determination: Optional[str] = Query(
+            "ELBOW", alias="clusterDetermination",
+            description="ELBOW, SILHOUETTE"
+        )
 ):
     """
     This endpoint processes the uploaded file and returns
@@ -74,14 +71,8 @@ async def perform_kmeans_clustering(
     try:
         data_frame = load_dataframe(file_path)
 
-        if force_run_as_job:
-            job = Job(func=process_and_cluster, args=[data_frame, cluster_count_determination, distance_metric,
-                                                      columns, k_cluster])
-            return JobEntry(uuid=str(job.uuid), status=JobStatus.WAITING)
-        else:
-            results = await run_job_async(func=process_and_cluster,
-                                          args=[data_frame, cluster_count_determination, distance_metric, columns,
-                                                k_cluster])
+        results = process_and_cluster(data_frame, cluster_count_determination, distance_metric,
+                                      columns, k_cluster)
 
         # Return clustering result model
         return ClusterResult(
@@ -107,5 +98,5 @@ async def perform_kmeans_clustering(
         raise HTTPException(500, "Error processing file") from error
 
     finally:
-        if not TEST_MODE and not force_run_as_job:
+        if not TEST_MODE:
             delete_file(file_path)

@@ -47,7 +47,7 @@ async def perform_kmeans_clustering(
     supported_metrics = list(CustomKMeans.supported_distance_metrics.keys())
     if distance_metric not in supported_metrics:
         error_msg = (
-            f"Invalid distance metric. Supported metrics are: "
+            f"{distance_metric}: Invalid distance metric. Supported metrics are: "
             f"{', '.join(supported_metrics)}"
         )
         raise HTTPException(400, error_msg)

@@ -1,3 +1,6 @@
+"""
+Stellt die Datenbank bereit
+"""
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -14,8 +17,11 @@ DBBase = declarative_base()
 
 
 def get_db():
-    db = SessionLocal()
+    """
+    Gibt eine Instanz der Datenbankverbindung zurück
+    """
+    database = SessionLocal()
     try:
-        yield db
+        yield database
     finally:
-        db.close()
+        database.close()

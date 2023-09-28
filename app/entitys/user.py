@@ -1,11 +1,12 @@
 from sqlalchemy import Column, String, create_engine, BigInteger
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from app.database.connection import get_engine
 
 # Datenbank-Konfiguration
 Base = declarative_base()
 engine = get_engine()
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

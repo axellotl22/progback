@@ -29,30 +29,32 @@ cd progback
 ```bash
 Progback/
 │
-├── app/                        # Hauptanwendungsverzeichnis
-│ ├── routers/                  # FastAPI-Endpunkte
-│ │ ├── clustering_router.py    # Endpunkt für das Hochladen und Clustern von Dateien
-│ ├── models/                   # Datenmodelle und -schemata
-│ │ ├── clustering_model.py     # Modelle für Eingabe-/Ausgabedaten
-│ ├── services/                 # Dienstprogramme und Services
-│ │ ├── clustering_service.py   # Dienstprogramme für KMeans-Clustering
-│ │  
-│ └── main.py                   # Hauptanwendungsdatei
+├── app/                          # Hauptanwendungsverzeichnis
+│ ├── routers/                    # FastAPI-Endpunkte
+│ │ ├── clustering_router.py      # Endpunkt für das Hochladen und Clustern von Dateien
+│ ├── models/                     # Datenmodelle und -schemata
+│ │ ├── clustering_model.py       # Modelle für Eingabe-/Ausgabedaten
+│ ├── services/                   # Dienstprogramme und Services
+│ │ ├── clustering_algorithms.py  # Modifizierter K-Means mit variabler Ditanzberechnung
+│ │ ├── clustering_service.py     # Dienstprogramme für KMeans-Clustering 
+│ │ ├── utils_service.py          # Hilfsprogramme
+│ │   
+│ └── main.py                     # Hauptanwendungsdatei
 │
-├── temp_files/                 # Verzeichnis für hochgeladene Dateien 
+├── temp_files/                   # Verzeichnis für hochgeladene Dateien 
 │
-├── tests/                      # Testverzeichnis
+├── tests/                        # Testverzeichnis
 │ ├── __init__.py
-│ ├── test_app.py               # Haupttestdatei
+│ ├── test_app.py                 # Haupttestdatei
 │
-├── .github/                    # GitHub-spezifische Dateien
-│ └── workflows/                # CI/CD-Workflows
+├── .github/                      # GitHub-spezifische Dateien
+│ └── workflows/                  # CI/CD-Workflows
 │
-├── deploy.sh                   # Automatisierte Bereitstellung des Containers und Lazydocker 
+├── deploy.sh                     # Automatisierte Bereitstellung des Containers und Lazydocker 
 ├── docker-compose.yml
 ├── Dockerfile
 ├── .gitignore
-├── .env.example                # Konfigurationsdatei für Umgebungsvariablen
+├── .env.example                  # Konfigurationsdatei für Umgebungsvariablen
 ├── requirements.txt
 └── README.md
 ```
@@ -108,50 +110,100 @@ Um den Endpunkt zu nutzen, sendet man eine POST-Anfrage mit folgenden Parametern
 
 - **file**: Die Excel- oder CSV-Datei zum Clustern (Pflicht). Als Formdaten senden.
 
-- **clusters** (optional): Die gewünschte Anzahl an Clustern. Wenn nicht angegeben, wird die optimale Zahl automatisch bestimmt. 
+- **kCluster** (optional): Die gewünschte Anzahl an Clustern. Wenn nicht angegeben, wird die optimale Zahl automatisch bestimmt.
 
-- **columns** (optional): Eine Liste mit Spaltennamen, die fürs Clustering verwendet werden sollen. Standardmäßig die ersten zwei Spalten. 
+- **column1** (optional): Auswahl der ersten Spalte. Wenn nicht angegeben 0 (0-Indexierung)
 
-Beispiel bei lokaler ausführung:
-```bash
-     curl -X 'POST' \
-    'http://localhost:8080/clustering/perform-kmeans-clustering/' \
-    -H 'accept: application/json' \
-    -H 'Content-Type: multipart/form-data' \
-    -F 'file=@Hier_die_Datei_angeben.xlsx;type=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' \
-    -F 'columns='
+- **column2** (optional): Auswahl der zweiten Spalte. Wenn nicht angegeben 1 (0-Indexierung)
+
+- **distance_metric** (optional): Die gewünschte Distanzmetrik. Standardmäßig die euklidische Distanz (EUCLIDEAN, MANHATTAN, JACCARDS).
+
+- **clusterDetermination** (optinal): Die gewünschte Methode zur Bestimmung der optimalen Cluster-Anzahl (ELBOW, SILHOUETTE).
+
+### Möglicher Aufruf über TypeScript:
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ClusteringService {
+  private apiUrl = 'http://localhost:8080/clustering/perform-kmeans-clustering/';
+
+  constructor(private http: HttpClient) { }
+
+  performClustering(
+    file: File,
+    column1?: string | number,
+    column2?: string | number,
+    kCluster?: number,
+    distanceMetric: string = 'EUCLIDEAN',
+    clusterDetermination: string = 'ELBOW'
+  ) {
+    const formData: FormData = new FormData();
+    formData.append('file', file);
+    let params = new HttpParams()
+      .set('distanceMetric', distanceMetric)
+      .set('clusterDetermination', clusterDetermination);
+
+    if (column1 !== undefined) {
+      params = params.set('column1', column1.toString());
+    }
+    if (column2 !== undefined) {
+      params = params.set('column2', column2.toString());
+    }
+    if (kCluster !== undefined) {
+      params = params.set('kCluster', kCluster.toString());
+    }
+
+    return this.http.post(this.apiUrl, formData, { params: params });
+  }
+}
 ```
-
 
 ## Response
 
 Die API antwortet mit einem JSON-Objekt, das Folgendes enthält:
 
-- **points**: Die geclusterten Datenpunkte mit Koordinaten und Cluster.
-- **centroids**: Die Koordinaten der generierten Cluster-Zentroids.
-- **point_to_centroid_mappings**: Eine Abbildung von Punkten zu ihrem zugehörigen Zentroid.
+- **user_id**: Aktuell nur Platzhalter
+- **request_id**: Aktuell nur Platzhalter
+- **name**: Name der Ausgabe
+- **cluster**: Eine Liste mit Clustern, die wiederum eine Liste mit den zugehörigen Datenpunkten enthalten
+- **x_label**: Name der X-Achse
+- **y_label**: Name der Y-Achse
+- **iterations**: Anzahl der Iterationen, die für das Clustering benötigt wurden
+- **used_distance_metric**: Die verwendete Distanzmetrik
+- **used_optK_method**: Die verwendete Methode zur Bestimmung der optimalen Anzahl an Clustern
+- **clusters_elbow**: Die Anzahl an Clustern, die durch die Elbow-Methode bestimmt wurde
+- **clusters_silhouette**: Die Anzahl an Clustern, die durch die Silhouette-Methode bestimmt wurde
 
 ```json  
 {
-  "points": [
+  "user_id": 0,
+  "request_id": 0,
+  "name": "string",
+  "cluster": [
     {
-      "x": 0,
-      "y": 0,
-      "cluster": 0
+      "clusterNr": 0,
+      "centroid": {
+        "x": 0,
+        "y": 0
+      },
+      "points": [
+        {
+          "additionalProp1": 0,
+          "additionalProp2": 0,
+          "additionalProp3": 0
+        }
+      ]
     }
   ],
-  "centroids": [
-    {
-      "x": 0,
-      "y": 0,
-      "cluster": 0
-    }
-  ],
-  "point_to_centroid_mappings": {
-    "additionalProp1": 0,
-    "additionalProp2": 0,
-    "additionalProp3": 0
-  },
   "x_label": "string",
-  "y_label": "string"
+  "y_label": "string",
+  "iterations": 0,
+  "used_distance_metric": "string",
+  "used_optK_method": "string",
+  "clusters_elbow": 0,
+  "clusters_silhouette": 0
 }

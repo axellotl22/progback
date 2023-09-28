@@ -1,138 +1,169 @@
 """
-Dienste für Clustering-Funktionen.
+Services for clustering functions. 
 """
 
-import ast
 import logging
-import os
-from typing import List, Union
-
+from joblib import Parallel, delayed
 import numpy as np
-import pandas as pd
-from fastapi import HTTPException
-from gap_statistic import OptimalK
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
+from .clustering_algorithms import CustomKMeans
+from .utils import clean_dataframe, select_columns
 
-
-# Logging-Einstellungen
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-MAX_CLUSTERS = 10
 
-
-def load_dataframe(file_path: str) -> pd.DataFrame:
+def calculate_elbow(data_frame, max_clusters):
     """
-    Lädt eine Datei in ein Pandas DataFrame.
+    Determines optimal number of clusters using elbow method.
+
+    Elbow method looks at within cluster sum of squares (WCSS) 
+    for different values of k. The optimal k is at the "elbow"
+    where the curve bends.
+
+    Args:
+    - data_frame (DataFrame): Data for clustering
+    - max_clusters (int): Maximum number of clusters to check
+
+    Returns:
+    - int: Optimal number of clusters based on elbow method
     """
-    if file_path.endswith('.csv'):
-        return pd.read_csv(file_path)
-    if file_path.endswith('.xlsx') or file_path.endswith('.xls'):
-        return pd.read_excel(file_path)
-    if file_path.endswith('.json'):
-        return pd.read_json(file_path)
-    if file_path.endswith('.parquet'):
-        return pd.read_parquet(file_path)
 
-    raise ValueError(
-        f"Unsupported file type: {os.path.splitext(file_path)[1]}")
+    # Calculate WCSS for range of clusters
+    wcss = [KMeans(n_clusters=i, init='k-means++',
+                   max_iter=300, n_init=10,
+                   random_state=0).fit(data_frame).inertia_
+            for i in range(1, max_clusters+1)]
+
+    # Take second order difference of WCSS
+    differences = np.diff(wcss, n=2)
+
+    # Optimal k is at minimum of second order differences
+    # Add 3 because we took second order differences
+    return np.argmin(differences) + 3
 
 
-def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
+def calculate_silhouette(data_frame, max_clusters):
     """
-    Bereinigt das DataFrame von leeren und unvollständigen Zeilen.
+    Determines optimal number of clusters using silhouette score.
+
+    Silhouette score measures how well samples are clustered. 
+    Score is between -1 and 1, with a higher score indicating
+    better clustering.
+
+    Args:
+    - data_frame (DataFrame): Data for clustering 
+    - max_clusters (int): Max number of clusters to check
+
+    Returns:
+    - int: Optimal number of clusters based on silhouette score
     """
-    return data_frame.dropna()
+
+    # Calculate silhouette scores for different k
+    silhouette_scores = [silhouette_score(data_frame,
+                                          KMeans(n_clusters=i,
+                                                 init='k-means++',
+                                                 max_iter=300,
+                                                 n_init=10,
+                                                 random_state=0).fit(data_frame).labels_)
+                         for i in range(2, max_clusters+1)]
+
+    # Optimal k is where silhouette score is maximum
+    # Add 2 because we start calculating scores at k=2
+    return np.argmax(silhouette_scores) + 2
 
 
-def determine_optimal_clusters(data_frame: pd.DataFrame) -> int:
+def perform_clustering(data_frame, num_clusters, distance_metric="EUCLIDEAN"):
     """
-    Bestimmt die optimale Clusteranzahl mittels verschiedener Methoden.
+    Performs clustering and returns results.
+
+    Args:
+    - data_frame (DataFrame): Data for clustering
+    - num_clusters (int): Number of clusters
+    - distance_metric (string): Distance metric to use
+
+    Returns:
+    - dict: Results of clustering
     """
-    if len(data_frame) < 1000:
-        optimal_k = OptimalK(parallel_backend='joblib')
-        n_clusters = optimal_k(
-            data_frame.values, cluster_array=np.arange(1, min(MAX_CLUSTERS, len(data_frame))))
-        return n_clusters
 
-    n_clusters = determine_clusters_using_silhouette(data_frame)
-    return min(n_clusters, len(data_frame) - 1)
+    # Create CustomKMeans model
+    kmeans = CustomKMeans(num_clusters)
 
+    # Fit model to data
+    kmeans.fit(data_frame.values)
 
-def determine_clusters_using_silhouette(data_frame: pd.DataFrame) -> int:
-    """
-    Bestimmt die optimale Clusteranzahl mittels der Silhouetten-Methode.
-    """
-    sil_scores = []
-    max_clusters = min(data_frame.shape[0] - 1, MAX_CLUSTERS)
+    # Get cluster labels
+    labels = kmeans.labels_
 
-    for i in range(2, max_clusters):
-        kmeans = KMeans(n_clusters=i, init='k-means++',
-                        max_iter=300, n_init=10, random_state=0).fit(data_frame)
-        sil_scores.append(silhouette_score(data_frame, kmeans.labels_))
+    # Create cluster results
+    clusters = [
+        {
+            "clusterNr": idx,
+            "centroid": {"x": centroid[0], "y": centroid[1]},
+            "points": [{"x": point[0], "y": point[1]} for point,
+                       label in zip(data_frame.values, labels) if label == idx]
+        }
+        for idx, centroid in enumerate(kmeans.cluster_centers_)
+    ]
 
-    return list(range(2, max_clusters))[sil_scores.index(max(sil_scores))]
-
-
-def select_columns(data_frame: pd.DataFrame, columns: List[int]) -> pd.DataFrame:
-    """
-    Wählt bestimmte Spalten aus einem DataFrame aus basierend auf deren Index.
-    """
-    if any(col_idx >= len(data_frame.columns) for col_idx in columns):
-        raise ValueError(
-            f"Ungültiger Spaltenindex. Das DataFrame hat nur {len(data_frame.columns)} Spalten.")
-
-    selected_columns = [data_frame.columns[idx] for idx in columns]
-    return data_frame[selected_columns]
-
-
-def perform_clustering(data_frame: pd.DataFrame, n_clusters: int) -> dict:
-    """
-    Führt KMeans-Clustering auf dem DataFrame aus 
-    und gibt die Ergebnisse im gewünschten Format zurück.
-    """
-    kmeans = KMeans(n_clusters=n_clusters, init='k-means++',
-                    random_state=42, n_init=MAX_CLUSTERS)
-    kmeans.fit(data_frame)
-
-    points = [{"x": point[0], "y": point[1], "cluster": label}
-              for point, label in zip(data_frame.values, kmeans.labels_)]
-    centroids = [{"x": centroid[0], "y": centroid[1], "cluster": idx}
-                 for idx, centroid in enumerate(kmeans.cluster_centers_)]
-
-    response_data = {
-        "points": points,
-        "centroids": centroids,
-        "point_to_centroid_mappings": dict(enumerate(kmeans.labels_)),
+    # Create results dictionary
+    results = {
+        "name": "K-Means Clustering Result",
+        "cluster": clusters,
         "x_label": data_frame.columns[0],
-        "y_label": data_frame.columns[1]
+        "y_label": data_frame.columns[1],
+        "iterations": kmeans.iterations_,
+        "distance_metric": distance_metric
     }
-    return response_data
+
+    return results
 
 
-def delete_file(file_path: str):
+def process_and_cluster(data_frame, method="ELBOW", distance_metric="EUCLIDEAN",
+                        columns=None, num_clusters=None):
     """
-    Löscht die angegebene Datei.
+    Processes data frame and performs clustering.
+
+    Args:
+    - data_frame (DataFrame): Data for clustering
+    - method (str): Method to determine number of clusters
+    - distance_metric (str): Distance metric for clustering
+    - columns (list): Columns to use for clustering
+    - num_clusters (int): Specified number of clusters
+
+    Returns:
+    - dict: Results of clustering 
     """
-    try:
-        if os.environ.get("TEST_MODE") != "True":
-            os.remove(file_path)
-            logging.info("File %s successfully deleted.", file_path)
-    except FileNotFoundError:
-        logging.warning("File %s was already deleted.", file_path)
-    except OSError as error:
-        logging.error("Error deleting file %s: %s", file_path, error)
 
+    # Clean and select columns
+    data_frame = clean_dataframe(data_frame)
+    if columns:
+        data_frame = select_columns(data_frame, columns)
 
-def process_columns_input(columns: Union[str, List[int]]) -> List[int]:
-    """Verarbeitet die Eingabe von 'columns' und gibt sie als Liste von Ganzzahlen zurück."""
-    if isinstance(columns, str):
-        try:
-            columns = ast.literal_eval(columns)
-            if not all(isinstance(item, int) for item in columns):
-                raise ValueError("Ungültige Werte in columns Eingabe.")
-        except Exception as exc:
-            raise HTTPException(
-                400, "Ungültiges Format für columns. Erwartet eine Liste von Ganzzahlen.") from exc
-    return columns
+    # Get max clusters to try
+    max_clusters = min(int(0.25 * data_frame.shape[0]), 50)
+
+    # Calculate optimal clusters for both methods
+    methods = [calculate_elbow, calculate_silhouette]
+    results = Parallel(n_jobs=-1)(delayed(method)(data_frame, max_clusters)
+                                  for method in methods)
+
+    # Store optimal clusters
+    optimal_clusters_methods = {
+        "ELBOW": results[0],
+        "SILHOUETTE": results[1]
+    }
+
+    # Use provided num_clusters if given
+    optimal_clusters = num_clusters if num_clusters else optimal_clusters_methods[method]
+
+    # Perform clustering
+    result = perform_clustering(data_frame, optimal_clusters, distance_metric)
+
+    # Add optimal cluster values to result
+    result["clusters_elbow"] = results[0]
+    result["clusters_silhouette"] = results[1]
+
+    return result

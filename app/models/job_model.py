@@ -3,6 +3,8 @@ import enum
 from pydantic import BaseModel
 from app.services.database_service import DBBase
 from sqlalchemy import Column, Integer, String, DateTime, Enum
+from json import dumps
+from typing import List
 
 
 class JobStatus(enum.Enum):
@@ -24,6 +26,23 @@ class DBJob(DBBase):
     status = Column(Enum(JobStatus), nullable=False)
     job_type = Column(String, nullable=False)
     result = Column(String, nullable=True)
+
+
+class UserJob:
+    class Type(Enum):
+        KMEANS = 0
+        DECISIONTREES = 1
+
+    def __init__(self, type, parameters):
+        self.type = type
+        self.parameters = parameters
+
+    def toJSON(self):
+        return dumps(self, default=lambda o: o.__dict__,
+              sort_keys=False, indent=None)
+
+    type: Type
+    parameters: dict
 
 
 class JobEntry(BaseModel):

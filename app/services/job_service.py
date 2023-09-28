@@ -3,7 +3,11 @@ from typing import Callable, List
 import asyncio
 import logging
 import uuid
-from app.models.job_model import JobStatus
+from app.models.job_model import JobStatus, DBJob
+from sqlalchemy.orm import Session
+from datetime import datetime
+from fastapi import Depends
+from app.services.database_service import get_db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -11,7 +15,31 @@ logger = logging.getLogger(__name__)
 jobs = []
 
 
-class Job:
+def create_job(db: Session, user_id: int, file_name: str, file_hash: str, job_type: str):
+    db_job = DBJob(user_id=user_id, created_at=datetime.now(), status=JobStatus.WAITING,
+                   file_name=file_name, file_hash=file_hash, job_type=job_type)
+    db.add(db_job)
+    db.commit()
+    db.refresh(db_job)
+    return db_job
+
+
+def set_job_result(db: Session, job_id: int, result: str):
+    db.query(DBJob).filter(DBJob.id == job_id).update({DBJob.result: result})
+    db.commit()
+    return
+
+
+def list_jobs(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(DBJob).offset(skip).limit(limit).all()
+
+
+def get_job_by_id(db: Session, job_id: int):
+    return db.query(DBJob).filter(DBJob.id == job_id).first()
+
+
+
+class RunJob:
     """
     Test
     """
@@ -50,4 +78,4 @@ class Job:
 
 
 async def run_job_async(func: Callable, args: List):
-    return await Job(func, args).run_async()
+    return await RunJob(func, args).run_async()

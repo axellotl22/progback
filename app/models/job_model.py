@@ -1,13 +1,18 @@
+"""
+Enthält die Klassen für Jobs
+"""
 import enum
+from json import dumps
 
 from pydantic import BaseModel
-from app.services.database_service import DBBase
 from sqlalchemy import Column, Integer, String, DateTime, Enum
-from json import dumps
-from typing import List
+from app.services.database_service import DBBase
 
 
 class JobStatus(enum.Enum):
+    """
+    Enum für den Status von Jobs
+    """
     CANCELED = -2
     ERROR = -1
     WAITING = 0
@@ -15,7 +20,11 @@ class JobStatus(enum.Enum):
     DONE = 2
 
 
+# pylint: disable=too-few-public-methods
 class DBJob(DBBase):
+    """
+    Job als Modell für SQLAlchemy
+    """
     __tablename__ = "jobs"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -29,19 +38,36 @@ class DBJob(DBBase):
 
 
 class UserJob:
+    """
+    Ein Job, welcher ausgeführt werden kann
+    """
+
+    # pylint: disable=too-many-ancestors
     class Type(Enum):
+        """
+        Enum für Jobtypen
+        """
         KMEANS = 0
         DECISIONTREES = 1
 
-    def __init__(self, type, parameters):
-        self.type = type
+    def __init__(self, jobtype, parameters):
+        """
+        Konstruktur
+        :param jobtype:
+        :param parameters:
+        """
+        self.jobtype = jobtype
         self.parameters = parameters
 
-    def toJSON(self):
+    def to_json(self):
+        """
+        Klasse als JSON
+        :return:
+        """
         return dumps(self, default=lambda o: o.__dict__,
-              sort_keys=False, indent=None)
+                     sort_keys=False, indent=None)
 
-    type: Type
+    jobtype: Type
     parameters: dict
 
 

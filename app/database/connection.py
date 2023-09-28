@@ -6,7 +6,7 @@ def get_database_url():
 
     print(dev)
 
-    if dev == "True":
+    if dev == 'True':
         host = os.environ['DB_HOST']
         port = os.environ['DB_PORT']
         pswd = os.environ['DB_PW']
@@ -16,7 +16,5 @@ def get_database_url():
         port = os.environ['D_DB_PORT']
         pswd = os.environ['D_DB_PW']
         schema = os.environ['D_DB_SCHEMA']
-
-    print(host)
 
     return f"mysql+pymysql://progback:{pswd}@{host}:{port}/{schema}?charset=utf8mb4"

@@ -14,3 +14,4 @@ gap-stat
 SQLAlchemy
 fastapi-users[sqlalchemy]
 matplotlib
+pymysql

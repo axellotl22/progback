@@ -4,13 +4,11 @@ Hauptmodul der App.
 
 from fastapi import FastAPI
 from app.routers import clustering_router
-from app.database.connection import get_database_url
-
-database_url = get_database_url()
-
-print(database_url)
+from app.entitys.user import (create_user)
 
 app = FastAPI()
+
+create_user()
 
 app.include_router(clustering_router.router, prefix="/clustering", tags=["clustering"])
 

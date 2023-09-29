@@ -11,7 +11,7 @@ def get_database_url():
     test_mode = os.environ.get('TEST_MODE')
 
     if test_mode == 'True' or test_mode is None:
-        return ''
+        return False
 
     dev = os.environ['DEV_MODE']
 

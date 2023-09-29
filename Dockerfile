@@ -2,6 +2,7 @@ FROM python:3.10-slim
 
 ARG DEV_MODE=True
 ENV DEV_MODE ${DEV_MODE}
+ENV TEST_MODE False
 
 ARG D_DB_HOST=""
 ARG D_DB_PORT=""

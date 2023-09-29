@@ -15,7 +15,7 @@ docker-compose down
 docker-compose build
 
 # Starte Container im Hintergrund 
-docker-compose up -d
+docker-compose up --env-file .env -d
 
 # Entferne nicht mehr genutzte Container
 docker image prune -f

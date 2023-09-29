@@ -38,8 +38,8 @@ async def perform_kmeans_clustering(
     )
 ):
     """
-    This endpoint processes the uploaded file and returns 
-    the clustering results. User can optionally specify 
+    This endpoint processes the uploaded file and returns
+    the clustering results. User can optionally specify
     columns and distance metric.
     """
 

@@ -11,4 +11,8 @@ fastapi[test]
 python-multipart
 httpx
 gap-stat
+SQLAlchemy
+fastapi-users[sqlalchemy]
+matplotlib
+pymysql
 joblib

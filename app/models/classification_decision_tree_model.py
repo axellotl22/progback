@@ -2,6 +2,7 @@
 
 from typing import List, Optional, Union
 from pydantic import BaseModel
+from enum import Enum
 
 class FileUpload(BaseModel):
     """
@@ -52,3 +53,9 @@ class DecisionTreeResult(BaseModel):
     - root (TreeNode): Wurzelknoten des Entscheidungsbaums.
     """
     root: TreeNode
+    
+class SplitStrategy(Enum):
+    BEST_SPLIT = "Best Split"
+    MEDIAN = "Median"
+    DURCHSCHNITT = "Durchschnitt" 
+    RANDOM_SPLIT = "Random Split"

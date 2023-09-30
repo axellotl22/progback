@@ -16,6 +16,7 @@ Confusion MAtrix
 import numpy as np
 from collections import Counter
 from enum import Enum
+import pandas as pd
 
 
 class SplitStrategy(Enum):
@@ -71,6 +72,18 @@ class DecisionTree:
         right = self.create_tree(X[id_right, :], y[id_right], depth+1)
         return Node(best_feature, best_treshold, left, right)
     
+    def extract_feature_names(df, target_column):
+        """
+        Extrahiert die Feature-Namen aus einem DataFrame.
+
+        Parameters:
+        - df: pandas DataFrame
+        - target_column: Name der Ziel-Spalte (z.B. "Drug")
+
+        Returns:
+        - Liste der Feature-Namen
+        """
+        return [col for col in df.columns if col != target_column]
     def confusion_matrix(self, y_true, y_pred):
         """
         Erstellt eine Confusion Matrix für binäre Klassifikation.
@@ -147,7 +160,8 @@ class DecisionTree:
             
                
             
-    
+    def accuracy (y_test, y_pred):
+        return np.sum(y_test==y_pred)/len(y_test)
         
     def calc_information_gain(self, y, X_column, treshold):
         #IG=E(parent)-[weighted averege]*E(children)

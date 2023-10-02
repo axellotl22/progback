@@ -3,6 +3,11 @@ version: '3.8'
 services:
   programierprojekt:
     image: programierprojekt:latest
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_PW=${DB_PW}
+      - DB_SCHEMA=${DB_SCHEMA}
     build:
       context: .
       dockerfile: Dockerfile

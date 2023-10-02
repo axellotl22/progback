@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 
-from app.models.classification_model_decision_tree import DecisionTree, DecisionTreeResult, DecisionTreeTrainingsData, SplitStrategy, BestSplitStrategy
+from app.models.classification_model_decision_tree import DecisionTree, DecisionTreeResult, DecisionTreeTrainingsData, SplitStrategy, BestSplitStrategy, Node
 from app.services.classification_algorithms_decision_tree import CustomDecisionTree, CustomNode
 import app.services.classification_service_decision_tree as dts
 
@@ -32,7 +32,7 @@ async def perform_kmeans_clustering(
     split_strategy: Optional[SplitStrategy]= Query("Best Split", alias="SplitStrategy",description="Best Split, Median, Durchschnitt, Random Split"),
     features_count: Optional[int]= Query(None, alias="featureAmount",description=""),
     labelclass: Optional[int]= Query(None, alias="ClassColumn",description="Column4Classes"),
-    feature_weights: Optional[List[int]]= Query(None, alias="FeatureWeights",description=""),
+    #feature_weights: Optional[List[int]]= Query(None, alias="FeatureWeights",description=""),
     presorted: Optional[int]= Query(None, alias="FeatureWeights",description="YES, NO"),
     pruning: Optional[int]= Query(None, alias="FeatureWeights",description="YES, NO")
     
@@ -60,8 +60,9 @@ async def perform_kmeans_clustering(
             max_depth=100
     if split_strategy is None:
             split_strategy=SplitStrategy.BEST_SPLIT
-    if feature_weights is None:
-            feature_weights= np.ones(features_count)
+    #if feature_weights is None:
+            #feature_weights= np.ones(features_count)
+    feature_weights= np.ones(features_count)
     features_count = None
     # Process file
     file_path = save_temp_file(file, TEMP_FILES_DIR)
@@ -72,11 +73,39 @@ async def perform_kmeans_clustering(
         X = data_frame.drop(target_column, axis=1).values  # Target Column Name = Zu klassifizierende Spalte
         y = data_frame[target_column].values
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1234)
-        clf = DecisionTree()
-        clf= dts.fit(clf,X_train, y_train)
+        clf = CustomDecisionTree(min_samples_split=min_samples_split, max_depth=max_depth, split_strategy=split_strategy)
+        clf.fit(X_train, y_train)
+        
         predictions = clf.predict(X_test)
         
         # Return clustering result model
+        
+        def CNode2Node(cnode: CustomNode):
+            logging.info("Start")
+            value_value = int(cnode.value) if cnode.value is not None else None
+            treshold_value = float(cnode.treshold) if cnode.treshold is not None else None
+            if cnode.is_leave:
+                
+                
+                logging.info("Leave")
+                node = Node(feature_id=int(cnode.feature_id), treshold=treshold_value, left=None, right=None, value=cnode.value, feature_name="")
+                return node
+            logging.info("Left")
+            left=CNode2Node(cnode.left)
+            logging.info("Right")
+            right=CNode2Node(cnode.right)
+            logging.info("No Leave")
+            node = Node(feature_id=int(cnode.feature_id), treshold=treshold_value, left=left, right=right, value=None, feature_name="")            
+            return node
+        
+        
+        
+        rootNode = CNode2Node(clf.root)
+        jsonresult=clf.to_json()
+        print(jsonresult)
+        return DecisionTree(root=clf.CNodes2NodeStructure(), min_samples_split=clf.min_samples_split, max_depth=clf.max_depth, features_count=clf.features_count, labelclass=clf.features_names,split_strategy=clf.split_strategy)
+        
+        """
         return DecisionTree(
             user_id=0,
             request_id=0,
@@ -89,6 +118,7 @@ async def perform_kmeans_clustering(
             feature_weights= feature_weights,
             split_strategy= split_strategy
         )
+        """
             
         
 

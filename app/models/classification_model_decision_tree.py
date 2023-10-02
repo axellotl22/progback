@@ -46,9 +46,18 @@ class Node(BaseModel):
     treshold: float
     left: Union['Node', None]
     right: Union['Node', None]
-    value: int
     feature_name: str
 Node.model_rebuild()
+
+class LeaveNode(BaseModel):
+    value: Union[int, None] 
+
+class FeatureNode(BaseModel):
+    feature_name: str
+    feature_id: int
+    left: Union['FeatureNode','LeaveNode', None]
+    right: Union['FeatureNode','LeaveNode', None]
+    treshold: float
 
 class DecisionTreeTrainingsData(BaseModel):
     """
@@ -75,20 +84,20 @@ class DecisionTree(BaseModel):
     - split_strategy: Verfahren, nachdem gesplittet werden soll
    
     """
-    user_id: int
-    request_id: int
-    name: str
-    root: Node
+    root: FeatureNode
     min_samples_split: int
     max_depth: int
     features_count: Optional[int]
     labelclass: Optional[int]
-    feature_weights: Optional[List[int]]
+    #feature_weights: Optional[List[int]]
     split_strategy: Optional[SplitStrategy]
     
 class DecisionTreeResult(BaseModel):
     """
     Modell für Decision Tree Vorhersagen
     """
+    user_id: int
+    request_id: int
+    name: str
     decision_tree: DecisionTree
     predicted_class: str

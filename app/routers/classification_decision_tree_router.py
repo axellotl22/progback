@@ -6,34 +6,28 @@ import logging
 from typing import Optional, List, Union
 from sklearn.model_selection import train_test_split
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from app.models.classification_decision_tree_model import TreeNode, DecisionTreeData, DecisionTreeResult, SplitStrategy, DecisionTree
-import app.services.classification_decision_tree_service
+from app.models.classification_decision_tree_model import TreeNode, DecisionTreeData, DecisionTreeResult, SplitStrategy
+import app.services.classification_decision_tree_service as dts
 import app.models.classification_decision_tree_model
 from app.services.utils import clean_dataframe, select_columns, delete_file, load_dataframe
+import numpy as np
+import pandas as pd
 
 
 TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"
 TEMP_FILES_DIR = "temp_files/"
 
 router = APIRouter()
-def convert_text_to_categorical(df):
-        """
-        Convert all text columns in a DataFrame to categorical columns.
 
-        Parameters:
-        - df: pandas DataFrame
-
-        Returns:
-        - DataFrame with text columns converted to categorical columns
-        """
-        for col in df.columns:
-            if df[col].dtype == 'object':  # if column has text values
-                df[col] = df[col].astype('category').cat.codes  # convert to categorical codes
-        return df
 @router.post("/perform-decision_tree-classification/", response_model=DecisionTreeResult)
 async def perform_decision_tree_classification(
     file: UploadFile = File(...),
-    columns: Optional[Union[str, List[int]]] = None
+    min_samples_split: Optional[int]=2,
+    max_depth: Optional[int]=100,
+    split_strategy: Optional[SplitStrategy]=SplitStrategy.BEST_SPLIT,
+    features_count: Optional[int]=None,
+    feature_weights: Optional[Union[str, List[int]]] = None,
+    presorted: Optional [int]=0
 ):
     """
     Dieser Endpunkt verarbeitet die hochgeladene Datei und gibt 
@@ -52,27 +46,39 @@ async def perform_decision_tree_classification(
     try:
         data_frame = load_dataframe(file_path)
         data_frame = clean_dataframe(data_frame)
+        data_frame= dts.convert_text_to_categorical(data_frame)
 
-        if columns:
-            data_frame = select_columns(data_frame, columns)
-
-        df = convert_text_to_categorical(df)
+        
+        if min_samples_split is None:
+            min_samples_split=2
+        if max_depth is None:
+            max_depth=100
+        if split_strategy is None:
+            split_strategy=SplitStrategy.BEST_SPLIT
+        if feature_weights is None:
+            feature_weights= np.ones(features_count)
+        features_count = None
+        
         target_column=("Drug")
         #target_column="Education"
 
         # Features und Labels extrahieren
-        X = df.drop(target_column, axis=1).values  # Target Column Name = Zu klassifizierende Spalte
-        y = df[target_column].values
+        X = data_frame.drop(target_column, axis=1).values  # Target Column Name = Zu klassifizierende Spalte
+        y = data_frame[target_column].values
 
         # Feature-Namen extrahieren
         #feature_names = df.columns[:-1].tolist()
         #data = datasets.load_breast_cancer()
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1234)
-
-        clf = DecisionTree(split_strategy=SplitStrategy.DURCHSCHNITT)
-        clf.fit(X_train, y_train)
-        return DecisionTreeResult(clf)
+        clf=DecisionTreeResult(min_samples_split=min_samples_split, max_depth=max_depth, split_strategy=split_strategy)
+        dts.fit(clf, X_train, y_train)
+        
+        #clf = DecisionTree(split_strategy=SplitStrategy.DURCHSCHNITT)
+        #clf.fit(X_train, y_train)
+        return DecisionTreeResult(clf, min_samples_split, max_depth, features_count, None, feature_weights, split_strategy)
+    
+    
     except ValueError as error:
         logging.error("Fehler beim Lesen der Datei: %s", error)
         raise HTTPException(400, "Nicht unterstützter Dateityp") from error

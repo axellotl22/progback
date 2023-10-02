@@ -13,7 +13,11 @@ class FileUpload(BaseModel):
     """
     filename: str
 
-
+class SplitStrategy(Enum):
+    BEST_SPLIT = "Best Split"
+    MEDIAN = "Median"
+    DURCHSCHNITT = "Durchschnitt" 
+    RANDOM_SPLIT = "Random Split"
 class TreeNode(BaseModel):
     """
     Modell für einen Knoten im Entscheidungsbaum.
@@ -51,11 +55,20 @@ class DecisionTreeResult(BaseModel):
     
     Attributes:
     - root (TreeNode): Wurzelknoten des Entscheidungsbaums.
+    - min_samples_split (int): Mindestanzahl an Dateneinträgen, die an Knoten vorhanden sein muss, für weiteren Split
+    - max_depth (int): Maximale Tiefe/Anzahl an Ebenen, die der Baum haben soll
+    - features_count (int): Anzahl zu betrachtender Features
+    - className: Klassenüberschrift
+    - feature_weights: Gewichtung der einzelnen Features für Split
+    - split_strategy: Verfahren, nachdem gesplittet werden soll
     """
     root: TreeNode
+    min_samples_split: int
+    max_depth: int
+    features_count: Optional[int]
+    className: Optional[str]
+    feature_weights: Optional[List[int]]
+    split_strategy: Optional[SplitStrategy]
+        
     
-class SplitStrategy(Enum):
-    BEST_SPLIT = "Best Split"
-    MEDIAN = "Median"
-    DURCHSCHNITT = "Durchschnitt" 
-    RANDOM_SPLIT = "Random Split"
+

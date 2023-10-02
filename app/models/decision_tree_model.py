@@ -16,7 +16,6 @@ Confusion MAtrix
 import numpy as np
 from collections import Counter
 from enum import Enum
-import pandas as pd
 
 
 class SplitStrategy(Enum):
@@ -24,7 +23,10 @@ class SplitStrategy(Enum):
     MEDIAN = "Median"
     DURCHSCHNITT = "Durchschnitt" 
     RANDOM_SPLIT = "Random Split"
-
+class BestSplitMethod(Enum):
+    GINI = "Gini-Index"
+    ENTROPY = "Entropy"
+    INFORMATION_GAIN = "Information Gain"
 class Node:
     def __init__(self, feature_id=None, treshold=None, left=None, right=None,*,value=None):
         self.feature_id = feature_id
@@ -72,18 +74,6 @@ class DecisionTree:
         right = self.create_tree(X[id_right, :], y[id_right], depth+1)
         return Node(best_feature, best_treshold, left, right)
     
-    def extract_feature_names(df, target_column):
-        """
-        Extrahiert die Feature-Namen aus einem DataFrame.
-
-        Parameters:
-        - df: pandas DataFrame
-        - target_column: Name der Ziel-Spalte (z.B. "Drug")
-
-        Returns:
-        - Liste der Feature-Namen
-        """
-        return [col for col in df.columns if col != target_column]
     def confusion_matrix(self, y_true, y_pred):
         """
         Erstellt eine Confusion Matrix für binäre Klassifikation.
@@ -160,8 +150,7 @@ class DecisionTree:
             
                
             
-    def accuracy (y_test, y_pred):
-        return np.sum(y_test==y_pred)/len(y_test)
+    
         
     def calc_information_gain(self, y, X_column, treshold):
         #IG=E(parent)-[weighted averege]*E(children)
@@ -193,7 +182,7 @@ class DecisionTree:
         id_right = np.argwhere(X_column>split_treshold).flatten()
         return id_left, id_right
         
-    def calc_gini():
+    def calc_gini(self, y):
         count_numbers = np.bincount(y) #Array how often which number is used
         p_vals = count_numbers/len(y)
         return 1-np.sum([p*p for p in p_vals if p>0])
@@ -202,6 +191,7 @@ class DecisionTree:
     
     #def calc_gini_index():   
     def most_frequent_label(self, y):
+        
         counter = Counter(y)
         value = counter.most_common(1)[0][0]
         return value
@@ -218,6 +208,7 @@ class DecisionTree:
         return np.array([self.traverse_tree(x, self.root)for x in X])
    
     def to_json(self, node=None):
+    
         if node is None:
             node = self.root
 

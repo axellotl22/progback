@@ -88,7 +88,7 @@ class DecisionTree(BaseModel):
     min_samples_split: int
     max_depth: int
     features_count: Optional[int]
-    labelclass: Optional[int]
+    labelclassname: Optional[str]
     #feature_weights: Optional[List[int]]
     split_strategy: Optional[SplitStrategy]
     

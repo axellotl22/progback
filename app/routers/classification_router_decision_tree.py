@@ -31,7 +31,7 @@ async def perform_kmeans_clustering(
     max_depth: Optional[int]= Query(100, alias="",description=""),
     split_strategy: Optional[SplitStrategy]= Query("Best Split", alias="SplitStrategy",description="Best Split, Median, Durchschnitt, Random Split"),
     features_count: Optional[int]= Query(None, alias="featureAmount",description=""),
-    labelclass: Optional[int]= Query(None, alias="ClassColumn",description="Column4Classes"),
+    labelclassname: Optional[str]= Query(None, alias="ClassColumn",description="Column4Classes"),
     #feature_weights: Optional[List[int]]= Query(None, alias="FeatureWeights",description=""),
     presorted: Optional[int]= Query(None, alias="FeatureWeights",description="YES, NO"),
     pruning: Optional[int]= Query(None, alias="FeatureWeights",description="YES, NO")
@@ -69,7 +69,8 @@ async def perform_kmeans_clustering(
 
     try:
         data_frame = dts.convert_text_to_categorical(load_dataframe(file_path))
-        target_column=("Drug")
+        #target_column=("Drug")
+        target_column=labelclassname
         X = data_frame.drop(target_column, axis=1).values  # Target Column Name = Zu klassifizierende Spalte
         y = data_frame[target_column].values
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1234)
@@ -99,11 +100,7 @@ async def perform_kmeans_clustering(
             return node
         
         
-        
-        rootNode = CNode2Node(clf.root)
-        jsonresult=clf.to_json()
-        print(jsonresult)
-        return DecisionTree(root=clf.CNodes2NodeStructure(), min_samples_split=clf.min_samples_split, max_depth=clf.max_depth, features_count=clf.features_count, labelclass=clf.features_names,split_strategy=clf.split_strategy)
+        return DecisionTree(root=clf.CNodes2NodeStructure(), min_samples_split=clf.min_samples_split, max_depth=clf.max_depth, features_count=clf.features_count, labelclassname=clf.features_names,split_strategy=clf.split_strategy)
         
         """
         return DecisionTree(

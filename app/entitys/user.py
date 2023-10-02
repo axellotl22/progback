@@ -1,28 +1,34 @@
-from sqlalchemy import Column, String, Integer
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from typing import AsyncGenerator
+
+from fastapi import Depends
+from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase
+
 from app.database.connection import get_engine
 
-# Datenbank-Konfiguration
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
+
+
+class User(SQLAlchemyBaseUserTableUUID, Base):
+    pass
+
+
 engine = get_engine()
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-class User(Base):
-    __tablename__ = "user"
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    username = Column(String(80), unique=True, index=True)
-    email = Column(String(128), unique=True, index=True)
+async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 
-# Tabelle erstellen
-Base.metadata.create_all(bind=engine)
-session = Session(bind=engine)
+async def create_db_and_tables():
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata, create_all)
 
 
-def create_user():
-    new_user = User(username='mh3', email='mh3@axellotl.de')
-    session.add(new_user)
-    session.commit()
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session_maker as session:
+        yield session
+
+
+async def get_user_db(session: AsyncSession = Depends(get_async_session)):
+    yield SQLAlchemyUserDatabase(session, User)

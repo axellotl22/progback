@@ -29,25 +29,6 @@ class BestSplitStrategy(Enum):
     GINI = "Gini-Index"
     ENTROPY = "Entropy"
     INFORMATION_GAIN = "Information Gain"
-    
-class Node(BaseModel):
-    """
-    Modell für einzelne Nodes des Decision Trees
-    
-    Attribute:
-    - feature_id: ID des Features
-    - treshold: Richtwert des Knotens
-    - left: Linker Kindknoten
-    - right: rechter Kindknoten
-    - value: Klasse, falls Leave Node
-    - feature_name: Name des Features
-    """
-    feature_id: int
-    treshold: float
-    left: Union['Node', None]
-    right: Union['Node', None]
-    feature_name: str
-Node.model_rebuild()
 
 class LeaveNode(BaseModel):
     value: Union[int, None] 

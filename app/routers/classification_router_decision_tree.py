@@ -34,13 +34,13 @@ async def perform_kmeans_clustering(
     labelclassname: Optional[str]= Query(None, alias="ClassColumnName",description="Column4Classes"),
     feature_weights: Optional[List[int]]= Query(None, alias="FeatureWeights",description=""),
     presorted: Optional[int]= Query(None, alias="Vorsortieren?",description="Falls ja, Spaltennummer eintragen"),
-    pruning: Optional[int]= Query(None, alias="Pruning?",description="YES, NO"),
-    confusionMatrix: Optional[int]= Query(None, alias="ConfusionMatrix?",description="YES, NO"),
+    pruning: Optional[bool]= Query(None, alias="Pruning?",description="YES, NO"),
+    confusionMatrix: Optional[bool]= Query(None, alias="ConfusionMatrix?",description="YES, NO"),
     test_size: Optional[float]= Query(None, alias="TestSize",description="Anteil an Testdaten"),
     random_state: Optional[int]= Query(None, alias="RandomState",description=""),
     best_split_strategy: Optional[BestSplitStrategy]= Query("Information Gain", alias="BestSplitStrategy",description="Information Gain, Entropy, Gini-Index"),
-    feature_behaviour: Optional[int]= Query(None, alias="FeatureBehaviour",description="Mit/Ohne Zurücklegen -> Mehrfachwahl von Feature, YES/NO"),
-    labelclassnumber: Optional[str]= Query(None, alias="ClassColumnNumber",description="Column4Classes")
+    feature_behaviour: Optional[bool]= Query(None, alias="FeatureBehaviour",description="Mit/Ohne Zurücklegen -> Mehrfachwahl von Feature, YES/NO"),
+    labelclassnumber: Optional[str]= Query(None, alias="ClassColumnNumber",description="Column4Classes, labelclassname wird bevorzugt, falls ausgefüllt")
 ):
     """
     This endpoint processes the uploaded file and returns
@@ -89,7 +89,7 @@ async def perform_kmeans_clustering(
         if random_state is None:
             random_state=1234
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
-        clf = CustomDecisionTree(min_samples_split=min_samples_split, max_depth=max_depth, split_strategy=split_strategy)
+        clf = CustomDecisionTree(min_samples_split=min_samples_split, max_depth=max_depth, split_strategy=split_strategy, features_count=features_count)
         clf.fit(X_train, y_train)
         
         predictions = clf.predict(X_test)

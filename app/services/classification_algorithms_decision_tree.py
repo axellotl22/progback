@@ -4,7 +4,7 @@ Implementierung eines Decision Trees mit Customizing Funktionen:
 """
 import numpy as np
 from collections import Counter
-from app.models.classification_model_decision_tree import Node, FeatureNode, LeaveNode, SplitStrategy
+from app.models.classification_model_decision_tree import FeatureNode, LeaveNode, SplitStrategy
 class CustomNode:
     
     def __init__(self, feature_id=None, treshold=None, left=None, right=None,*,value=None):

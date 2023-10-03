@@ -12,8 +12,10 @@ python-multipart
 httpx
 gap-stat
 SQLAlchemy
+SQLAlchemy[asyncio]
 fastapi-users[sqlalchemy]
 matplotlib
 pymysql
 joblib
 aiosqlite
+aiomysql

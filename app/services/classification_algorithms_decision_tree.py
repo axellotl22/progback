@@ -117,8 +117,7 @@ class CustomDecisionTree:
         # -Sum of p(X)*log2(p(X)), P(X) = Number of x/number of values
         count_numbers = np.bincount(y) #Array how often which number is used
         p_vals = count_numbers/len(y)
-        return -np.sum([p*np.log2(p) for p in p_vals if p>0])
-           
+        return -np.sum([p*np.log2(p) for p in p_vals if p>0])  
     def split (self, X_column, split_treshold):
         id_left = np.argwhere(X_column<=split_treshold).flatten()
         id_right = np.argwhere(X_column>split_treshold).flatten()
@@ -141,6 +140,46 @@ class CustomDecisionTree:
         right_child = self.CNodes2NodeStructure(node.right)
         return FeatureNode(feature_id=node.feature_id, treshold=node.treshold, left=left_child, right=right_child, feature_name=f"Is feature {node.feature_id} <= {node.treshold}?")
     
+
+    
+
+    def node_error(self, y):
+        """
+        Berechnet den Fehler eines Knotens basierend auf den gegebenen Zielwerten.
+
+        Parameters:
+        - y: Die Zielwerte.
+
+        Returns:
+        - error: Der Fehler des Knotens.
+        """
+        most_common_label = self.most_frequent_label(y)
+        error = sum([1 for label in y if label != most_common_label])
+        return error
+
+    def prune(self, node, X, y):
+        """
+        Stutzt den Baum rekursiv, um Overfitting zu verhindern.
+
+        Parameters:
+        - node: Der aktuelle Knoten.
+        - X: Die Eingabedaten.
+        - y: Die Zielwerte.
+        """
+        if node.is_leave():
+            return
+        id_left, id_right = self.split(X[:, node.feature_id], node.treshold)
+        if node.left:
+            self.prune(node.left, X[id_left], y[id_left])
+        if node.right:
+            self.prune(node.right, X[id_right], y[id_right])
+        if node.left.is_leave() and node.right.is_leave():
+            error_without_prune = self.node_error(y)
+            error_with_prune = self.node_error(y[id_left]) + self.node_error(y[id_right])     
+            if error_with_prune < error_without_prune:
+                node.left = None
+                node.right = None
+                node.value = self.most_frequent_label(y) 
     
     
     

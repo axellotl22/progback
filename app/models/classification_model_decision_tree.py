@@ -22,7 +22,7 @@ class SplitStrategy(Enum):
     DURCHSCHNITT = "Durchschnitt" 
     RANDOM_SPLIT = "Random Split"
     
-class BestSplitStrategy:
+class BestSplitStrategy(Enum):
     """
     Enum zur Auswahl des Verfahrens, was der BestSplit ist
     """
@@ -85,6 +85,7 @@ class DecisionTree(BaseModel):
    
     """
     root: FeatureNode
+    accuracy: float
     min_samples_split: int
     max_depth: int
     features_count: Optional[int]

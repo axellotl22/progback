@@ -81,6 +81,7 @@ def get_async_engine():
         return create_async_engine("sqlite+aiosqlite://", connect_args={"check_same_thread": False})
 
     db_url = get_async_database_url()
+
     return create_async_engine(db_url)
 
 

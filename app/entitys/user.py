@@ -1,3 +1,5 @@
+import os
+
 from fastapi import Depends
 from fastapi_users.schemas import BaseUser, BaseUserCreate, BaseUserUpdate
 from fastapi_users.db import SQLAlchemyUserDatabase
@@ -21,8 +23,8 @@ class UserUpdate(BaseUserUpdate):
     pass
 
 
-APP_SECRET = 'test'
-VERIFICATION_SECRET = 'test2'
+APP_SECRET = os.environ['APP_SECRET']
+VERIFICATION_SECRET =  os.environ['VERIFICATION_SECRET']
 
 class UserManager(UUIDIDMixin, BaseUserManager):
     reset_password_token_secret = APP_SECRET

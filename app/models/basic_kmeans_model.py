@@ -26,17 +26,17 @@ class Cluster(BaseModel):
     Model representing a single cluster.
 
     Attributes:
-    - clusterNr (int): Number representing the cluster.
+    - cluster_nr (int): Number representing the cluster.
     - centroid (Centroid): The centroid of the cluster.
     - points (List[Dict[str, float]]): List of points within the cluster.
     """
 
-    clusterNr: int
+    cluster_nr: int
     centroid: Centroid
     points: List[Dict[str, float]]
 
 
-class KMeansResult(BaseModel):
+class BasicKMeansResult(BaseModel):
     """
     Model representing the result of the KMeans clustering process.
 
@@ -44,6 +44,8 @@ class KMeansResult(BaseModel):
     - user_id (int): User ID.
     - request_id (int): Request ID.
     - clusters (List[Cluster]): List of resulting clusters.
+    - x_label (str): Label for the X-coordinate.
+    - y_label (str): Label for the Y-coordinate.
     - iterations (int): Number of iterations the algorithm ran.
     - used_distance_metric (str): The distance metric used for clustering.
     - filename (str): Name of the file containing the data points.
@@ -53,8 +55,8 @@ class KMeansResult(BaseModel):
     user_id: int
     request_id: int
     clusters: List[Cluster]
-    x_label:str
-    y_label:str
+    x_label: str
+    y_label: str
     iterations: int
     used_distance_metric: str
     filename: str

@@ -87,7 +87,7 @@ async def perform_kmeans_clustering(
             clusters_elbow=results["clusters_elbow"],
             clusters_silhouette=results["clusters_silhouette"]
         )
-
+    # pylint: disable=duplicate-code
     except ValueError as error:
         logging.error("Error reading file: %s", error)
         raise HTTPException(400, "Unsupported file type") from error

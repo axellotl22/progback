@@ -1,37 +1,47 @@
-from pydantic import BaseModel
+"""
+elbow_models.py
+---------------
+
+Pydantic models for the elbow method visualization. 
+"""
+
 from typing import List
+from pydantic import BaseModel
 
 class AxisLabel(BaseModel):
     """
-    Beschreibung für die Achsen.
+    Description of the plot axes.
 
     Attributes:
-    - x (str): Beschreibung für die x-Achse
-    - y (str): Beschreibung für die y-Achse
+        x (str): Label for x-axis 
+        y (str): Label for y-axis
     """
     x: str
     y: str
 
-class Point(BaseModel):
+
+class DataPoint(BaseModel):
     """
-    Datenpunkt für die Visualisierung.
+    Single data point for visualization.
 
     Attributes:
-    - x (float): Wert der x-Achse
-    - y (float): Wert der y-Achse
+        x (float): X-axis value
+        y (float): Y-axis value   
     """
     x: float
     y: float
 
-class ElbowVisualizationResult(BaseModel):
+
+class ElbowResult(BaseModel):
     """
-    Rückgabeobjekt für die Elbow-Methode.
+    Response model for elbow method endpoint.
 
     Attributes:
-    - points (List[Point]): Liste der Datenpunkte für x und y Achse
-    - labels (AxisLabel): Beschriftungen der Achsen
-    - recommended_point (Point): Empfohlener Datenpunkt (k-Wert) mit entsprechendem x und y Wert
+        points (List[DataPoint]): List of (x, y) points 
+        labels (AxisLabel): Axis labels
+        recommended_point (DataPoint): Recommended k value and distortion
     """
-    points: List[Point]
+    
+    points: List[DataPoint]
     labels: AxisLabel
-    recommended_point: Point
+    recommended_point: DataPoint

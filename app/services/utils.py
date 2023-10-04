@@ -4,7 +4,7 @@ This module provides functions for loading, cleaning and processing dataframes.
 
 import logging
 import os
-from typing import List
+from typing import List, Union
 
 import pandas as pd
 
@@ -41,7 +41,8 @@ def load_dataframe(file_path: str) -> pd.DataFrame:
     if file_path.endswith(JSON):
         return pd.read_json(file_path)
 
-    raise ValueError(f"Unsupported file type: {os.path.splitext(file_path)[1]}")
+    raise ValueError(
+        f"Unsupported file type: {os.path.splitext(file_path)[1]}")
 
 
 def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
@@ -84,6 +85,17 @@ def select_columns(data_frame: pd.DataFrame, columns: List[int]) -> pd.DataFrame
     # Select columns by index
     selected_cols = [data_frame.columns[idx] for idx in columns]
     return data_frame[selected_cols]
+
+
+def extract_selected_columns(data_frame: pd.DataFrame,
+                             selected_columns: Union[None, list[int]] = None) -> pd.DataFrame:
+    """
+    Extract the specified columns based on their indices from the dataframe.
+    """
+    if selected_columns:
+        columns_to_select = [data_frame.columns[i] for i in selected_columns]
+        return data_frame[columns_to_select]
+    return data_frame
 
 
 def delete_file(file_path: str):

@@ -160,11 +160,12 @@ class CustomDecisionTree:
         Returns:
         - error: Der Fehler des Knotens.
         """
+        
         most_common_label = self.most_frequent_label(y)
         error = sum([1 for label in y if label != most_common_label])
         return error
 
-    def prune(self, node, X, y):
+    def prune(self, node: CustomNode, X, y):
         """
         Stutzt den Baum rekursiv, um Overfitting zu verhindern.
 
@@ -174,7 +175,7 @@ class CustomDecisionTree:
         - y: Die Zielwerte.
         """
         if node.is_leave():
-            return
+            return 
         id_left, id_right = self.split(X[:, node.feature_id], node.treshold)
         if node.left:
             self.prune(node.left, X[id_left], y[id_left])

@@ -22,20 +22,20 @@ router = APIRouter()
 @router.post("/perform-kmeans-clustering/", response_model=ClusterResult)
 # pylint: disable=too-many-arguments
 async def perform_kmeans_clustering(
-        file: UploadFile = File(...),
-        column1: Optional[Union[str, int]] = None,
-        column2: Optional[Union[str, int]] = None,
-        k_cluster: Optional[int] = Query(
-            None, alias="kCluster", description="Number of clusters"
-        ),
-        distance_metric: Optional[str] = Query(
-            "EUCLIDEAN", alias="distanceMetric",
-            description=", ".join(CustomKMeans.supported_distance_metrics.keys())
-        ),
-        cluster_count_determination: Optional[str] = Query(
-            "ELBOW", alias="clusterDetermination",
-            description="ELBOW, SILHOUETTE"
-        )
+    file: UploadFile = File(...),
+    column1: Optional[Union[str, int]] = None,
+    column2: Optional[Union[str, int]] = None,
+    k_cluster: Optional[int] = Query(
+        None, alias="kCluster", description="Number of clusters"
+    ),
+    distance_metric: Optional[str] = Query(
+        "EUCLIDEAN", alias="distanceMetric",
+        description=", ".join(CustomKMeans.supported_distance_metrics.keys())
+    ),
+    cluster_count_determination: Optional[str] = Query(
+        "ELBOW", alias="clusterDetermination",
+        description="ELBOW, SILHOUETTE"
+    )
 ):
     """
     This endpoint processes the uploaded file and returns
@@ -47,7 +47,7 @@ async def perform_kmeans_clustering(
     supported_metrics = list(CustomKMeans.supported_distance_metrics.keys())
     if distance_metric not in supported_metrics:
         error_msg = (
-            f"{distance_metric}: Invalid distance metric. Supported metrics are: "
+            f"Invalid distance metric. Supported metrics are: "
             f"{', '.join(supported_metrics)}"
         )
         raise HTTPException(400, error_msg)
@@ -70,9 +70,8 @@ async def perform_kmeans_clustering(
 
     try:
         data_frame = load_dataframe(file_path)
-
-        results = process_and_cluster(data_frame, cluster_count_determination, distance_metric,
-                                      columns, k_cluster)
+        results = process_and_cluster(data_frame, cluster_count_determination,
+                                      distance_metric, columns, k_cluster)
 
         # Return clustering result model
         return ClusterResult(

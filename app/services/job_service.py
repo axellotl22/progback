@@ -3,23 +3,27 @@ Stellt Funktionen zur Verwaltung von Jobs bereit
 """
 from multiprocessing import Pool
 from typing import Callable, List
+
 import asyncio
 import logging
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-from app.models.job_model import JobStatus, DBJob
+from app.models.job_model import JobStatus
+from app.database.job_db import DBJob
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def create_job(database: Session, user_id: int, file_name: str, file_hash: str, job_type: str):
+def create_job(database: Session, user_id: int, job_parameters: str, json_input: str):
     """
     Erstellt einen Job in der Datenbank
     """
-    db_job = DBJob(user_id=user_id, created_at=datetime.now(), status=JobStatus.WAITING,
-                   file_name=file_name, file_hash=file_hash, job_type=job_type)
+
+    db_job = DBJob(user_id=user_id, created_at=datetime.now(),
+                   status=JobStatus.WAITING, json_values=json_input,
+                   job_parameters=job_parameters)
     database.add(db_job)
     database.commit()
     database.refresh(db_job)
@@ -45,7 +49,14 @@ def get_job_by_id(database: Session, job_id: int):
     """
     Gibt einen Job mit einer bestimmten ID zurück
     """
-    return database.query(DBJob).filter(DBJob.id.is_(job_id)).first()
+    return database.query(DBJob).get(job_id)
+
+
+def get_job_by_name(database: Session, job_name: str):
+    """
+    Gibt einen Job mit einer bestimmten ID zurück
+    """
+    return database.query(DBJob).where(DBJob.job_name.is_(job_name)).first()
 
 
 class RunJob:
@@ -71,6 +82,8 @@ class RunJob:
         logger.info("Running \"%s\"", self._func.__name__)
         loop = asyncio.get_event_loop()
         fut = loop.create_future()
+
+        print(self._func.__name__ + f"({self._args})")
 
         def _on_done(obj):
             """

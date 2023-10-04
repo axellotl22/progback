@@ -8,6 +8,8 @@ services:
       - DB_PORT=${DB_PORT}
       - DB_PW=${DB_PW}
       - DB_SCHEMA=${DB_SCHEMA}
+      - APP_SECRET=${APP_SECRET}
+      - VERIFICATION_SECRET=${VERIFICATION_SECRET}
     build:
       context: .
       dockerfile: Dockerfile

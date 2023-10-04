@@ -1,28 +1,49 @@
-from sqlalchemy import Column, String, Integer
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from app.database.connection import get_engine
+import os
 
-# Datenbank-Konfiguration
-Base = declarative_base()
-engine = get_engine()
+from fastapi import Depends
+from fastapi_users.schemas import BaseUser, BaseUserCreate, BaseUserUpdate
+from fastapi_users.db import SQLAlchemyUserDatabase
+from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin
+from fastapi_users.authentication import AuthenticationBackend, CookieTransport, JWTStrategy
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+from app.database.user_db import get_user_db
 
-
-class User(Base):
-    __tablename__ = "user"
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    username = Column(String(80), unique=True, index=True)
-    email = Column(String(128), unique=True, index=True)
+class UserRead(BaseUser):
+    username: str
+    pass
 
 
-# Tabelle erstellen
-Base.metadata.create_all(bind=engine)
-session = Session(bind=engine)
+class UserCreate(BaseUserCreate):
+    username: str
+    pass
 
 
-def create_user():
-    new_user = User(username='mh3', email='mh3@axellotl.de')
-    session.add(new_user)
-    session.commit()
+class UserUpdate(BaseUserUpdate):
+    username: str
+    pass
+
+
+APP_SECRET = os.environ['APP_SECRET']
+VERIFICATION_SECRET =  os.environ['VERIFICATION_SECRET']
+
+class UserManager(UUIDIDMixin, BaseUserManager):
+    reset_password_token_secret = APP_SECRET
+    verification_token_secret = VERIFICATION_SECRET
+
+
+async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)):
+    yield UserManager(user_db)
+
+
+cookie_transport = CookieTransport(cookie_httponly=True, cookie_secure=True)
+
+
+def get_jwt_strategy():
+    return JWTStrategy(secret=APP_SECRET, lifetime_seconds=3600)
+
+
+auth_backend = AuthenticationBackend(name="jwt", transport=cookie_transport, get_strategy=get_jwt_strategy)
+
+
+fastapi_users = FastAPIUsers(get_user_manager, [auth_backend])
+active_user = fastapi_users.current_user(active=True)

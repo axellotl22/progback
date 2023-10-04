@@ -5,7 +5,7 @@ This module provides functions for loading, cleaning and processing dataframes.
 import logging
 import os
 from typing import List
-
+from fastapi import HTTPException
 import pandas as pd
 
 # Constants in uppercase
@@ -126,3 +126,17 @@ def save_temp_file(file, directory):
         buffer.write(file.file.read())
 
     return file_path
+
+def sendValueError(error):
+    """
+    Send Value Error
+    """
+    logging.error("Error reading file: %s", error)
+    raise HTTPException(400, "Unsupported file type") from error
+
+def sendException(error):
+    """
+    Send Exception_Message
+    """
+    logging.error("Error processing file: %s", error)
+    raise HTTPException(500, "Error processing file") from error

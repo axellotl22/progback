@@ -14,9 +14,8 @@ from app.services.classification_algorithms_decision_tree import CustomDecisionT
 import app.services.classification_service_decision_tree as dts
 
 from app.services.utils import (
-    load_dataframe, delete_file, save_temp_file
+    load_dataframe, delete_file, save_temp_file, sendException, sendValueError
 )
-from app.services.clustering_algorithms import CustomKMeans
 
 TEST_MODE = os.environ.get("TEST_MODE", "False") == "True"
 TEMP_FILES_DIR = "temp_files/"
@@ -26,53 +25,52 @@ router = APIRouter()
 
 @router.post("/perform-classification-decision-tree/", response_model=DecisionTree)
 # pylint: disable=too-many-arguments
-async def perform_kmeans_clustering(
+async def perform_classification_decision_tree(
     file: UploadFile = File(...),
     min_samples_split: Optional[int] = Query(2, 
-                                             alias="SampleCount4Split",
-                                             description="Anzahl an Dateneinträgen, um weiteren Split durchzuführen"),
+                alias="SampleCount4Split",
+                description="Anzahl an Dateneinträgen, um weiteren Split durchzuführen"),
     max_depth: Optional[int]= Query(100, alias="",description=""),
     split_strategy: Optional[SplitStrategy]= Query("Best Split", 
-                                                   alias="SplitStrategy",
-                                                   description="Best Split, Median, Durchschnitt, Random Split"),
+                                        alias="SplitStrategy",
+                                        description="Best Split, Median, Durchschnitt, Random Split"),
     features_count: Optional[int]= Query(None, 
-                                         alias="featureAmount",
-                                         description=""),
+                                        alias="featureAmount",
+                                        description=""),
     labelclassname: Optional[str]= Query(None, 
-                                         alias="ClassColumnName",
-                                         description="Column4Classes"),
+                                        alias="ClassColumnName",
+                                        description="Column4Classes"),
     feature_weights: Optional[List[int]]= Query(None, 
-                                                alias="FeatureWeights",
-                                                description=""),
+                                        alias="FeatureWeights",
+                                        description=""),
     presorted: Optional[int]= Query(None, 
-                                    alias="Vorsortieren?",
-                                    description="Falls ja, Spaltennummer eintragen"),
+                                        alias="Vorsortieren?",
+                                        description="Falls ja, Spaltennummer eintragen"),
     pruning: Optional[bool]= Query(None, 
-                                   alias="Pruning?",
-                                   description="YES, NO"),
+                                        alias="Pruning?",
+                                        description="YES, NO"),
     confusionMatrix: Optional[bool]= Query(None, 
-                                           alias="ConfusionMatrix?",
-                                           description="YES, NO"),
+                                        alias="ConfusionMatrix?",
+                                        description="YES, NO"),
     test_size: Optional[float]= Query(None, 
-                                      alias="TestSize",
-                                      description="Anteil an Testdaten"),
+                                        alias="TestSize",
+                                        description="Anteil an Testdaten"),
     random_state: Optional[int]= Query(None, 
-                                       alias="RandomState",
-                                       description=""),
+                                        alias="RandomState",
+                                        description=""),
     best_split_strategy: Optional[BestSplitStrategy]= Query("Information Gain", 
-                                                            alias="BestSplitStrategy",
-                                                            description="Information Gain, Entropy, Gini-Index"),
+                                        alias="BestSplitStrategy",
+                                        description="Information Gain, Entropy, Gini-Index"),
     feature_behaviour: Optional[bool]= Query(None, 
-                                             alias="FeatureBehaviour",
-                                             description="Mit/Ohne Zurücklegen -> Mehrfachwahl von Feature, YES/NO"),
+                                        alias="FeatureBehaviour",
+                                        description="Mehrfachwahl von Features erlauben"),
     labelclassnumber: Optional[str]= Query(None, 
-                                           alias="ClassColumnNumber",
-                                           description="Column4Classes, labelclassname wird bevorzugt, falls ausgefüllt")
+                                        alias="ClassColumnNumber",
+                                        description="Nummer der zu klassifizierenden Spalte")
 ):
     """
     This endpoint processes the uploaded file and returns
-    the clustering results. User can optionally specify
-    columns and distance metric.
+    the classification results. 
     """
 
     # Validate distance metric
@@ -133,13 +131,9 @@ async def perform_kmeans_clustering(
                             accuracy=dts.accuracy(y_test, predictions))
 
     except ValueError as error:
-        logging.error("Error reading file: %s", error)
-        raise HTTPException(400, "Unsupported file type") from error
-
+       sendValueError(error)
     except Exception as error:
-        logging.error("Error processing file: %s", error)
-        raise HTTPException(500, "Error processing file") from error
-
+        sendException(error)
     finally:
         if not TEST_MODE:
             delete_file(file_path)

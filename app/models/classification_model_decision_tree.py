@@ -31,9 +31,16 @@ class BestSplitStrategy(Enum):
     INFORMATION_GAIN = "Information Gain"
 
 class LeaveNode(BaseModel):
+    """
+    Modell eines Blattknotens im Decision Tree
+    """
     value: Union[int, None] 
 
 class FeatureNode(BaseModel):
+    """
+    Modell für Root-Node und Feature/Splitnodes im Decision Tree
+    Knoten hat eine Bedingung, sowie Kindsknoten
+    """
     feature_name: str
     feature_id: int
     left: Union['FeatureNode','LeaveNode', None]

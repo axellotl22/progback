@@ -21,7 +21,13 @@ class CustomDecisionTree:
     """
     ...
     """
-    def __init__(self, min_samples_split=2, max_depth=100, features_count=None, features_names=None, class_Name=None, feature_weights=None, split_strategy= None):
+    def __init__(self, min_samples_split=2, 
+                 max_depth=100, 
+                 features_count=None, 
+                 features_names=None, 
+                 class_Name=None, 
+                 feature_weights=None, 
+                 split_strategy= None):
         self.min_samples_split= min_samples_split
         self.max_depth= max_depth
         self.features_count = features_count
@@ -138,10 +144,11 @@ class CustomDecisionTree:
             return LeaveNode(value=node.value)
         left_child = self.CNodes2NodeStructure(node.left)
         right_child = self.CNodes2NodeStructure(node.right)
-        return FeatureNode(feature_id=node.feature_id, treshold=node.treshold, left=left_child, right=right_child, feature_name=f"Is feature {node.feature_id} <= {node.treshold}?")
-    
-
-    
+        return FeatureNode(feature_id=node.feature_id, 
+                           treshold=node.treshold, 
+                           left=left_child, 
+                           right=right_child, 
+                           feature_name=f"Is feature {node.feature_id} <= {node.treshold}?")
 
     def node_error(self, y):
         """

@@ -1,8 +1,8 @@
 """Modelle für Decision Tree Classification"""
 
 from typing import List, Optional, Union
-from pydantic import BaseModel
 from enum import Enum
+from pydantic import BaseModel
 
 class FileUpload(BaseModel):
     """
@@ -64,7 +64,7 @@ class DecisionTree(BaseModel):
     
     Attribute:
     - root (TreeNode): Wurzelknoten des Entscheidungsbaums.
-    - min_samples_split (int): Mindestanzahl an Dateneinträgen, die an Knoten vorhanden sein muss, für weiteren Split
+    - min_samples_split (int): Mindestanzahl an Einträgen für Split
     - max_depth (int): Maximale Tiefe/Anzahl an Ebenen, die der Baum haben soll
     - features_count (int): Anzahl zu betrachtender Features
     - className: Klassenüberschrift
@@ -90,3 +90,5 @@ class DecisionTreeResult(BaseModel):
     name: str
     decision_tree: DecisionTree
     predicted_class: str
+    
+    

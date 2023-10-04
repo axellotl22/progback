@@ -4,7 +4,6 @@ Services
 
 import logging
 import numpy as np
-from collections import Counter
 
 
 logging.basicConfig(level=logging.INFO)

@@ -4,7 +4,7 @@ basic_kmeans_model.py
 Contains the basic data models used for the KMeans clustering process.
 """
 
-from typing import List, Dict, Optional
+from typing import List, Dict
 from pydantic import BaseModel
 
 

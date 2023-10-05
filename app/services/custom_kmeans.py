@@ -166,9 +166,9 @@ class BaseOptimizedKMeans:
         data_points = scaler.fit_transform(data_points)
 
         # Apply PCA for dimensionality reduction
-        if n_components:
-            pca = PCA(n_components=n_components)
-            data_points = pca.fit_transform(data_points)
+        n_components = n_components or min(data_points.shape)
+        pca = PCA(n_components=n_components)
+        data_points = pca.fit_transform(data_points)
 
         self._initialize_centers(data_points)
 
@@ -253,9 +253,9 @@ class OptimizedMiniBatchKMeans(BaseOptimizedKMeans):
         data_points = scaler.fit_transform(data_points)
 
         # Apply PCA for dimensionality reduction
-        if n_components:
-            pca = PCA(n_components=n_components)
-            data_points = pca.fit_transform(data_points)
+        n_components = n_components or min(data_points.shape)
+        pca = PCA(n_components=n_components)
+        data_points = pca.fit_transform(data_points)
 
         self._initialize_centers(data_points)
 

@@ -3,7 +3,6 @@
 from typing import List, Optional, Union
 from enum import Enum
 from pydantic import BaseModel
-#from numpy import ndarray
 
 class FileUpload(BaseModel):
     """

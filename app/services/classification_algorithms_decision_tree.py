@@ -5,11 +5,15 @@ Implementierung eines Decision Trees mit Customizing Funktionen:
 from collections import Counter
 import numpy as np
 from app.models.classification_model_decision_tree import FeatureNode, LeaveNode, SplitStrategy
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 class CustomNode:
     """
     Node für Decision Tree
     """
-    
+    # pylint: disable=too-many-arguments
     def __init__(self, feature_id=None, treshold=None, left=None, right=None,*,value=None):
         """
         Initialisierung des Custum Nodes
@@ -55,9 +59,10 @@ class CustomDecisionTree:
         self.features_names = features_names
         self.class_name = class_name
         if feature_weights is not None:
-            self.feature_weights=feature_weights
+            self.feature_weights= feature_weights
         else:
-            self.feature_weights=np.ones(features_count).tolist()
+            self.feature_weights= np.ones(features_count)  
+        self.split_strategy = split_strategy 
         self.split_strategy = split_strategy 
         self.root=None
         
@@ -73,6 +78,7 @@ class CustomDecisionTree:
             self.features_count = x_vals.shape[1]
         else:
             self.features_count = min(x_vals.shape[1], self.features_count)
+
         self.root = self.create_tree(x_vals, y_vals)
     
     def create_tree(self, x_vals, y_vals, depth=0):
@@ -118,7 +124,7 @@ class CustomDecisionTree:
         """
         Vorhersagen für Datenset treffen, durch ablaufen des Trees
         """
-        return np.array([self.traverse_tree(x_vals, self.root)for x_val in x_vals])
+        return np.array([self.traverse_tree(x_val, self.root)for x_val in x_vals])
     
     def choose_split(self, x_vals, y_vals, features, strategy):
         """

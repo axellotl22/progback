@@ -5,9 +5,7 @@ Implementierung eines Decision Trees mit Customizing Funktionen:
 from collections import Counter
 import numpy as np
 from app.models.classification_model_decision_tree import FeatureNode, LeaveNode, SplitStrategy
-import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
 
 class CustomNode:
     """

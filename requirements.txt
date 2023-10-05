@@ -22,3 +22,5 @@ aiomysql
 numba
 joblib
 psutil
+asyncio
+websockets

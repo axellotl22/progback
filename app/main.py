@@ -7,10 +7,8 @@ from app.routers import (clustering_router,
                          basic_kmeans_router, 
                          elbow_router,
                          advanced_kmeans_router)
-from app.database.user_db import create_db_and_tables
 
 from app.database import user_db, job_db
-from app.routers import clustering_router
 from app.routers import classification_router_decision_tree
 
 

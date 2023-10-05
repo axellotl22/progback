@@ -1,7 +1,6 @@
 """Router for clustering endpoints."""
 
 import os
-import logging
 from typing import Optional, Union
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
@@ -9,7 +8,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from app.models.clustering_model import ClusterResult
 from app.services.clustering_service import process_and_cluster
 from app.services.utils import (
-    load_dataframe, delete_file, save_temp_file, sendValueError, sendException
+    load_dataframe, delete_file, save_temp_file, handle_errors
 ) 
 from app.services.clustering_algorithms import CustomKMeans
 
@@ -87,12 +86,9 @@ async def perform_kmeans_clustering(
             clusters_elbow=results["clusters_elbow"],
             clusters_silhouette=results["clusters_silhouette"]
         )
-
-    except ValueError as error:
-       sendValueError(error)
-    except Exception as error:
-        sendException(error)
-
+    # pylint: disable=duplicate-code, broad-exception-caught
+    except (ValueError, Exception) as error:
+        handle_errors(error)
     finally:
         if not TEST_MODE:
             delete_file(file_path)

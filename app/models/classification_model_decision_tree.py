@@ -3,6 +3,7 @@
 from typing import List, Optional, Union
 from enum import Enum
 from pydantic import BaseModel
+#from numpy import ndarray
 
 class FileUpload(BaseModel):
     """
@@ -78,7 +79,7 @@ class DecisionTree(BaseModel):
     max_depth: int
     features_count: Optional[int]
     labelclassname: Optional[str]
-    #feature_weights: Optional[List[int]]
+    #feature_weights: Optional[ndarray]
     split_strategy: Optional[SplitStrategy]
     
 class DecisionTreeResult(BaseModel):

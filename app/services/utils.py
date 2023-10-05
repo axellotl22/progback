@@ -127,16 +127,12 @@ def save_temp_file(file, directory):
 
     return file_path
 
-def sendValueError(error):
+def handle_errors(error):
     """
-    Send Value Error
+    Error handling function.
     """
-    logging.error("Error reading file: %s", error)
-    raise HTTPException(400, "Unsupported file type") from error
-
-def sendException(error):
-    """
-    Send Exception_Message
-    """
+    if isinstance(error, ValueError):
+        logging.error("Error reading file: %s", error)
+        raise HTTPException(400, "Unsupported file type") from error
     logging.error("Error processing file: %s", error)
     raise HTTPException(500, "Error processing file") from error

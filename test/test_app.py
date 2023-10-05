@@ -8,6 +8,7 @@ from app.main import app
 
 # Set environment variable for test mode
 os.environ["TEST_MODE"] = "True"
+os.environ["DEV_MODE"] = "False"
 
 client = TestClient(app)
 

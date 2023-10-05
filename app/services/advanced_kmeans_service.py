@@ -3,60 +3,39 @@ advanced_kmeans_service.py
 --------------------------
 Service for performing KMeans clustering with automatic k determination using silhouette scores.
 """
-import os
+
 from fastapi import UploadFile
 from typing import Union
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
-from joblib import Parallel, delayed
-from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
 from app.models.basic_kmeans_model import BasicKMeansResult
-from app.services.utils import load_dataframe, clean_dataframe, extract_selected_columns, save_temp_file, delete_file
-from app.services.basic_kmeans_service import transform_to_cluster_model
+from app.services.utils import process_uploaded_file
+from app.services.basic_kmeans_service import perform_kmeans_from_dataframe
 
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 
-def silhouette_for_k(k, data, kmeans_type, distance_metric):
+def determine_optimal_k(data_frame, max_clusters):
     """
-    Compute the silhouette score for a given k.
+    Determine the optimal number of clusters using silhouette score.
 
     Args:
-    - k (int): Number of clusters.
-    - data (array-like): Data for clustering.
-    - kmeans_type (str): Type of KMeans model to use.
-    - distance_metric (str): Distance metric for clustering.
+    - data_frame (DataFrame): Data for clustering
+    - max_clusters (int): Maximum number of clusters to consider
 
     Returns:
-    - float: Silhouette score.
+    - int: Optimal number of clusters based on silhouette score
     """
-    if kmeans_type == "OptimizedKMeans":
-        model = OptimizedKMeans(k, distance_metric)
-    elif kmeans_type == "OptimizedMiniBatchKMeans":
-        model = OptimizedMiniBatchKMeans(k, distance_metric)
-    else:
-        raise ValueError(f"Invalid kmeans_type: {kmeans_type}")
+    silhouette_scores = [silhouette_score(data_frame,
+                                          KMeans(n_clusters=i,
+                                                 init='k-means++',
+                                                 max_iter=300,
+                                                 n_init=10,
+                                                 random_state=0).fit(data_frame).labels_)
+                         for i in range(2, max_clusters+1)]
 
-    model.fit(data)
-    labels = model.assign_labels(data)
-    return silhouette_score(data, labels)
-
-
-def determine_optimal_k(data, max_k, distance_metric="euclidean", kmeans_type="OptimizedKMeans"):
-    """
-    Determine the optimal number of clusters using the silhouette score.
-
-    Args:
-    - data (array-like): Data for clustering.
-    - max_k (int): Maximum number of clusters to consider.
-    - distance_metric (str): Distance metric for clustering.
-    - kmeans_type (str): Type of KMeans model to use.
-
-    Returns:
-    - int: Optimal number of clusters.
-    """
-    results = Parallel(n_jobs=-1)(delayed(silhouette_for_k)(k, data, kmeans_type, distance_metric) for k in range(2, max_k + 1))
-    optimal_k = results.index(max(results)) + 2  # +2 because k starts from 2
+    optimal_k = np.argmax(silhouette_scores) + 2  # +2 because we start calculating scores at k=2
     return optimal_k
-
 
 def perform_advanced_kmeans(
     file: UploadFile,
@@ -68,73 +47,26 @@ def perform_advanced_kmeans(
 ) -> BasicKMeansResult:
     """
     Perform KMeans clustering on an uploaded file with automatic k determination.
-
-    Args:
-    - file (UploadFile): Uploaded data file.
-    - distance_metric (str): Distance metric for clustering.
-    - kmeans_type (str): Type of KMeans model to use.
-    - user_id (int): User ID.
-    - request_id (int): Request ID.
-    - selected_columns (list[int]): Indices of selected columns.
-    - auto_pca (bool): Flag to enable automatic PCA.
-
-    Returns:
-    - KMeansResult: Result of the KMeans clustering.
-    """
-
-    # Save and load the uploaded file
-    temp_file_path = save_temp_file(file, "temp/")
-    data_frame = load_dataframe(temp_file_path)
-
-    data_frame = clean_dataframe(data_frame)
-
-    # Select specific columns if provided
-    if selected_columns:
-        data_frame = extract_selected_columns(data_frame, selected_columns)
-
-    # Convert DataFrame to numpy array for clustering
-    data_np = data_frame.values
-
-    # Standardize the data
-    scaler = StandardScaler()
-    standardized_data = scaler.fit_transform(data_np)
+    """    
+    # Process the uploaded file
+    data_frame, filename = process_uploaded_file(file, selected_columns)
 
     # Determine the optimal k
-    max_clusters = min(int(0.25 * data_frame.shape[0]), 50)
-    optimal_k = determine_optimal_k(standardized_data, max_clusters, distance_metric, kmeans_type)
+    max_clusters = min(int(0.25 * data_frame.shape[0]), 10)
+    optimal_k = determine_optimal_k(data_frame, max_clusters)
+    
+    
+    # Convert file to UploadFile Object
+    file = UploadFile(filename=filename, file=file.file)
 
-    # Initialize the KMeans model
-    if kmeans_type == "OptimizedKMeans":
-        model = OptimizedKMeans(optimal_k, distance_metric)
-    elif kmeans_type == "OptimizedMiniBatchKMeans":
-        model = OptimizedMiniBatchKMeans(optimal_k, distance_metric)
-    else:
-        raise ValueError(f"Invalid kmeans_type: {kmeans_type}")
-
-    # Fit the model
-    model.fit(standardized_data)
-
-    # Add cluster assignments to the DataFrame using _assign_labels method
-    data_frame['cluster'] = model.assign_labels(standardized_data)
-
-    # Transform the results to the Cluster model structure
-    clusters = transform_to_cluster_model(data_frame, model.cluster_centers_)
-
-    x_label = data_frame.columns[0]
-    y_label = data_frame.columns[1]
-
-    # Cleanup temp file
-    delete_file(temp_file_path)
-
-    return BasicKMeansResult(
+    # Use the basic_kmeans_service with the determined optimal k
+    result = perform_kmeans_from_dataframe(
+        df=data_frame,
+        distance_metric=distance_metric,
+        kmeans_type=kmeans_type,
         user_id=user_id,
         request_id=request_id,
-        clusters=clusters,
-        x_label=x_label,
-        y_label=y_label,
-        iterations=model.iterations_,
-        used_distance_metric=distance_metric,
-        filename=os.path.splitext(file.filename)[0],
-        k_value=optimal_k
+        advanced_k=optimal_k,
+        filename=filename
     )
-
+    return result

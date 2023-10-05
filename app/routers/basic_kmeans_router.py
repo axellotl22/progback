@@ -5,7 +5,7 @@ API router for performing KMeans clustering.
 """
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
-from app.services.basic_kmeans_service import perform_kmeans
+from app.services.basic_kmeans_service import perform_kmeans_from_file
 from app.services.custom_kmeans import BaseOptimizedKMeans
 
 router = APIRouter()
@@ -47,13 +47,13 @@ async def kmeans(
     - KMeansResult: Result of the KMeans clustering.
     """
     try:
-        kmeans_result = perform_kmeans(
-            file,
-            n_clusters,
-            distance_metric,
-            kmeans_type,
-            user_id,
-            request_id,
+        kmeans_result = perform_kmeans_from_file(
+            file=file,
+            user_k=n_clusters,
+            distance_metric=distance_metric,
+            kmeans_type=kmeans_type,
+            user_id=user_id,
+            request_id=request_id,
             selected_columns=[column_1, column_2]
         )
         # Return the KMeansResult object.

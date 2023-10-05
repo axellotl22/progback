@@ -6,7 +6,7 @@ import logging
 import os
 from typing import List, Union
 
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 import pandas as pd
 
 # Constants in uppercase
@@ -149,3 +149,25 @@ def handle_errors(error):
         raise HTTPException(400, "Unsupported file type") from error
     logging.error("Error processing file: %s", error)
     raise HTTPException(500, "Error processing file") from error
+
+def process_uploaded_file(file: UploadFile, selected_columns: Union[None, list[int]] = None) -> (pd.DataFrame, str):
+    """
+    Load, save, clean, and optionally select specific columns from the uploaded file. Returns the cleaned dataframe and filename.
+
+    Args:
+    - file (UploadFile): Uploaded data file.
+    - selected_columns (list[int], optional): Indices of selected columns, if any.
+
+    Returns:
+    - tuple: Cleaned dataframe and the filename of the uploaded file.
+    """
+    temp_file_path = save_temp_file(file, "temp/")
+    data_frame = load_dataframe(temp_file_path)
+    data_frame = clean_dataframe(data_frame)
+    
+    # Select specific columns if provided
+    if selected_columns:
+        data_frame = extract_selected_columns(data_frame, selected_columns)
+
+    delete_file(temp_file_path)
+    return data_frame, file.filename

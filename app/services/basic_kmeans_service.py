@@ -4,16 +4,18 @@ basic_kmeans_service.py
 Service for performing KMeans clustering using optimized KMeans and MiniBatch KMeans.
 """
 
+# pylint: disable=too-many-arguments
+# pylint: disable=R0914
+
 import logging
-import os
-from typing import Union
+from typing import Optional, Union
 import pandas as pd
 import numpy as np
 from fastapi import UploadFile
 from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
 from app.models.basic_kmeans_model import BasicKMeansResult, Cluster, Centroid
-from app.services.utils import (load_dataframe, clean_dataframe, save_temp_file, 
-                                delete_file, extract_selected_columns)
+from app.services.utils import process_uploaded_file
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -22,13 +24,6 @@ logger.setLevel(logging.INFO)
 def transform_to_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.ndarray) -> list:
     """
     Transform the data into the Cluster model structure.
-
-    Args:
-    - data_frame (pd.DataFrame): DataFrame containing the clustered data.
-    - cluster_centers (np.ndarray): Array of cluster centers.
-
-    Returns:
-    - list: List of Cluster models.
     """
     clusters_list = []
 
@@ -47,47 +42,42 @@ def transform_to_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.nda
     return clusters_list
 
 
-# pylint: disable=too-many-arguments
-# pylint: disable=R0914
-def perform_kmeans(
+
+def perform_kmeans_from_file(
     file: UploadFile,
-    k: int,
     distance_metric: str,
     kmeans_type: str,
     user_id: int,
     request_id: int,
-    selected_columns: Union[None, list[int]] = None
+    selected_columns: Union[None, list[int]] = None,
+    user_k: Optional[int] = None
 ) -> BasicKMeansResult:
-    """
-    Perform KMeans clustering on an uploaded file.
+    data_frame, filename = process_uploaded_file(file, selected_columns)
+    logger.info("Processed uploaded file. Shape: %s", data_frame.shape)
+    return _perform_kmeans(data_frame, filename, distance_metric, kmeans_type, user_id, request_id, user_k)
 
-    Args:
-    - file (UploadFile): Uploaded data file.
-    - k (int): Number of clusters.
-    - distance_metric (str): Distance metric for clustering.
-    - kmeans_type (str): Type of KMeans model to use.
-    - user_id (int): User ID.
-    - request_id (int): Request ID.
-    - selected_columns (list[int]): Indices of selected columns.
 
-    Returns:
-    - KMeansResult: Result of the KMeans clustering.
-    """
-    # Save and load the uploaded file
-    temp_file_path = save_temp_file(file, "temp/")
-    logger.info("Saved temp file to: %s", temp_file_path)
-    
-    data_frame = load_dataframe(temp_file_path)
-    logger.info("Loaded data from temp file. Shape: %s", data_frame.shape)
+def perform_kmeans_from_dataframe(
+    df: pd.DataFrame,
+    filename: str,
+    distance_metric: str,
+    kmeans_type: str,
+    user_id: int,
+    request_id: int,
+    advanced_k: Optional[int] = None
+) -> BasicKMeansResult:
+    return _perform_kmeans(df, filename, distance_metric, kmeans_type, user_id, request_id, advanced_k)
 
-    data_frame = clean_dataframe(data_frame)
-    logger.info("Cleaned data. New shape: %s", data_frame.shape)
 
-    # Select specific columns if provided
-    if selected_columns:
-        data_frame = extract_selected_columns(data_frame, selected_columns)
-        logger.info("Selected columns. New shape: %s", data_frame.shape)
-
+def _perform_kmeans(
+    data_frame: pd.DataFrame,
+    filename: str,
+    distance_metric: str,
+    kmeans_type: str,
+    user_id: int,
+    request_id: int,
+    k: int
+) -> BasicKMeansResult:
     # Convert DataFrame to numpy array for clustering
     data_np = data_frame.values
     logger.info("Converted data to numpy array. Shape: %s", data_np.shape)
@@ -105,7 +95,7 @@ def perform_kmeans(
     model.fit(data_np)
     logger.info("Fitted the model.")
 
-    # Add cluster assignments to the DataFrame using _assign_labels method
+    # Add cluster assignments to the DataFrame
     data_frame['cluster'] = model.assign_labels(data_np)
     logger.info("Assigned labels to data.")
 
@@ -116,10 +106,6 @@ def perform_kmeans(
     x_label = data_frame.columns[0]
     y_label = data_frame.columns[1]
 
-    # Cleanup temp file
-    delete_file(temp_file_path)
-    logger.info("Deleted temp file: %s", temp_file_path)
-
     logger.info("Completed perform_kmeans function.")
     return BasicKMeansResult(
         user_id=user_id,
@@ -129,7 +115,6 @@ def perform_kmeans(
         y_label=y_label,
         iterations=model.iterations_,
         used_distance_metric=distance_metric,
-        filename=os.path.splitext(file.filename)[0],
+        filename=filename,
         k_value=k
     )
-

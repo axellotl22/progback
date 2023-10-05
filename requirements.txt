@@ -20,3 +20,6 @@ pymysql
 joblib
 aiosqlite
 aiomysql
+asyncio
+websockets
+sqlalchemy

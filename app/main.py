@@ -3,7 +3,10 @@ Hauptmodul der App.
 """
 
 from fastapi import FastAPI
-from app.routers import clustering_router, basic_kmeans_router, elbow_router
+from app.routers import (clustering_router, 
+                         basic_kmeans_router, 
+                         elbow_router,
+                         advanced_kmeans_router)
 from app.database.user_db import create_db_and_tables
 from app.entitys.user import UserCreate, UserRead, UserUpdate, auth_backend, fastapi_users
 
@@ -11,7 +14,8 @@ app = FastAPI()
 
 #K-Means Variation
 app.include_router(clustering_router.router, prefix="/all_in_one", tags=["kmeans"])
-app.include_router(basic_kmeans_router.router, prefix="/basic", tags=["kmeans"])
+app.include_router(basic_kmeans_router.router, prefix="/basic", tags=["2D kmeans"])
+app.include_router(advanced_kmeans_router.router, prefix="/advanced", tags=["2D kmeans"])
 
 #Determinaton of optimal k cluster
 app.include_router(elbow_router.router, prefix="/determination", tags=["determination"])

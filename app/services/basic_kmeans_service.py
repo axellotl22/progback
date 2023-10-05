@@ -10,7 +10,6 @@ from typing import Union
 import pandas as pd
 import numpy as np
 from fastapi import UploadFile
-from sklearn.decomposition import PCA
 from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
 from app.models.basic_kmeans_model import BasicKMeansResult, Cluster, Centroid
 from app.services.utils import (load_dataframe, clean_dataframe, save_temp_file, 
@@ -48,23 +47,6 @@ def transform_to_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.nda
     return clusters_list
 
 
-def optimal_pca_components(data, variance_threshold=0.95):
-    """
-    Calculate the optimal number of PCA components based on variance threshold.
-
-    Args:
-    - data (array-like): Data for PCA.
-    - variance_threshold (float): Variance threshold for PCA.
-
-    Returns:
-    - int: Number of optimal PCA components.
-    """
-    pca = PCA()
-    pca.fit(data)
-    explained_variances = pca.explained_variance_ratio_.cumsum()
-    n_components = (explained_variances < variance_threshold).sum() + 1
-    return n_components
-
 # pylint: disable=too-many-arguments
 # pylint: disable=R0914
 def perform_kmeans(
@@ -74,8 +56,7 @@ def perform_kmeans(
     kmeans_type: str,
     user_id: int,
     request_id: int,
-    selected_columns: Union[None, list[int]] = None,
-    auto_pca: bool = True
+    selected_columns: Union[None, list[int]] = None
 ) -> BasicKMeansResult:
     """
     Perform KMeans clustering on an uploaded file.
@@ -88,54 +69,58 @@ def perform_kmeans(
     - user_id (int): User ID.
     - request_id (int): Request ID.
     - selected_columns (list[int]): Indices of selected columns.
-    - auto_pca (bool): Flag to enable automatic PCA.
 
     Returns:
     - KMeansResult: Result of the KMeans clustering.
     """
     # Save and load the uploaded file
     temp_file_path = save_temp_file(file, "temp/")
+    logger.info("Saved temp file to: %s", temp_file_path)
+    
     data_frame = load_dataframe(temp_file_path)
+    logger.info("Loaded data from temp file. Shape: %s", data_frame.shape)
 
     data_frame = clean_dataframe(data_frame)
+    logger.info("Cleaned data. New shape: %s", data_frame.shape)
 
     # Select specific columns if provided
     if selected_columns:
         data_frame = extract_selected_columns(data_frame, selected_columns)
+        logger.info("Selected columns. New shape: %s", data_frame.shape)
 
     # Convert DataFrame to numpy array for clustering
     data_np = data_frame.values
-
-    # Perform PCA if auto_pca is True
-    if auto_pca:
-        n_components = optimal_pca_components(data_np)
-        pca = PCA(n_components=n_components)
-        data_np = pca.fit_transform(data_np)
+    logger.info("Converted data to numpy array. Shape: %s", data_np.shape)
 
     # Initialize the KMeans model
     if kmeans_type == "OptimizedKMeans":
-        model = OptimizedKMeans(n_clusters=k, distance_metric=distance_metric)
+        model = OptimizedKMeans(k, distance_metric)
     elif kmeans_type == "OptimizedMiniBatchKMeans":
-        model = OptimizedMiniBatchKMeans(
-            n_clusters=k, distance_metric=distance_metric)
+        model = OptimizedMiniBatchKMeans(k, distance_metric)
     else:
-        raise ValueError(f"Invalid kmeans_type: {kmeans_type}")
+        raise ValueError("Invalid kmeans_type: {}".format(kmeans_type))
+    logger.info("Initialized %s model.", kmeans_type)
 
     # Fit the model
     model.fit(data_np)
+    logger.info("Fitted the model.")
 
     # Add cluster assignments to the DataFrame using _assign_labels method
     data_frame['cluster'] = model.assign_labels(data_np)
+    logger.info("Assigned labels to data.")
 
     # Transform the results to the Cluster model structure
     clusters = transform_to_cluster_model(data_frame, model.cluster_centers_)
+    logger.info("Transformed data to Cluster models.")
 
     x_label = data_frame.columns[0]
     y_label = data_frame.columns[1]
 
     # Cleanup temp file
     delete_file(temp_file_path)
+    logger.info("Deleted temp file: %s", temp_file_path)
 
+    logger.info("Completed perform_kmeans function.")
     return BasicKMeansResult(
         user_id=user_id,
         request_id=request_id,
@@ -147,3 +132,4 @@ def perform_kmeans(
         filename=os.path.splitext(file.filename)[0],
         k_value=k
     )
+

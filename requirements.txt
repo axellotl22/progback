@@ -20,3 +20,5 @@ joblib
 aiosqlite
 aiomysql
 numba
+joblib
+psutil

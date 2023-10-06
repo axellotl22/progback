@@ -21,7 +21,7 @@ def convert_text_to_categorical(data_frame):
     - DataFrame with text columns converted to categorical columns
     """
     for col in data_frame.columns:
-        if data_frame[col].dtype == 'object':  # if column has text values
+        if data_frame[col].dtype == 'object':  # Falls Textwerte vorhanden
             data_frame[col] = data_frame[col].astype('category').cat.codes
     return data_frame
 

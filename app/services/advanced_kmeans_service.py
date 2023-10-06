@@ -55,9 +55,8 @@ def perform_advanced_kmeans(
     max_clusters = min(int(0.25 * data_frame.shape[0]), 10)
     optimal_k = determine_optimal_k(data_frame, max_clusters)
     
-    
-    # Convert file to UploadFile Object
-    file = UploadFile(filename=filename, file=file.file)
+    #print dataframe shape
+    print(data_frame.shape)
 
     # Use the basic_kmeans_service with the determined optimal k
     result = perform_kmeans_from_dataframe(

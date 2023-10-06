@@ -8,6 +8,7 @@ from typing import List, Union
 
 from fastapi import HTTPException, UploadFile
 import pandas as pd
+from prince import FAMD
 
 # Constants in uppercase
 CSV = '.csv'

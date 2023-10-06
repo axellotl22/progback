@@ -8,7 +8,6 @@ import logging
 import numpy as np
 from sklearn.cluster import KMeans
 from numba import jit
-from sklearn.decomposition import PCA
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -84,7 +83,7 @@ class BaseOptimizedKMeans:
 
         self.cluster_centers_ = None
 
-    def fit(self, data_points, variance_threshold=0.9):
+    def fit(self, data_points):
         """
         Fit the KMeans clustering model.
 
@@ -93,20 +92,10 @@ class BaseOptimizedKMeans:
         - variance_threshold (float): Threshold for the explained variance for PCA. Defaults to 0.95.
         """
         logger.info("Starting fit method.")
-        
-        # Reduce dimensionality using PCA based on variance threshold
-        pca = PCA()
-        pca.fit(data_points)
-        cumsum = np.cumsum(pca.explained_variance_ratio_)
-        n_components = np.argmax(cumsum >= variance_threshold) + 1
-        
-        # Transform data_points using optimal n_components
-        data_points_reduced = pca.transform(data_points)[:, :n_components]
-        logger.info("Reduced data dimensionality using PCA to shape: %s", str(data_points_reduced.shape))
 
         # Initial cluster centers using KMeans
         kmeans = KMeans(n_clusters=self.number_clusters, init='k-means++', max_iter=1, n_init=1)
-        kmeans.fit(data_points_reduced)
+        kmeans.fit(data_points)
         self.cluster_centers_ = kmeans.cluster_centers_
         logger.info("Initialized cluster centers with KMeans. Cluster centers shape: %s", str(self.cluster_centers_.shape))
 

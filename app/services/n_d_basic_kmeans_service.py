@@ -18,7 +18,7 @@ from app.services.utils import process_uploaded_file, normalize_dataframe, handl
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-
+# pylint: disable=R0801
 def transform_to_2d_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.ndarray) -> list:
     """
     Transform the data into the 2D Cluster model structure.

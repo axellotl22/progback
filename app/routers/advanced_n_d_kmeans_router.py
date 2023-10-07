@@ -1,7 +1,8 @@
 """
 advanced_nd_kmeans_router.py
 ---------------------------
-API router for performing advanced N-Dimensional KMeans clustering and determining optimal k automatically.
+API router for performing advanced N-Dimensional KMeans clustering.
+With determining optimal k automatically.
 """
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
@@ -24,7 +25,8 @@ async def advanced_kmeans_nd(
     request_id: int = Query(0, description="Request ID")
 ):
     """
-    Endpoint for advanced N-D KMeans clustering with dimensionality reduction to 2D and automatic k determination.
+    Endpoint for advanced N-D KMeans clustering 
+    with dimensionality reduction to 2D and automatic k determination.
 
     Args:
     - file (UploadFile): Uploaded data file.

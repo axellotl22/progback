@@ -16,6 +16,8 @@ from app.services.n_d_basic_kmeans_service import perform_nd_kmeans_from_datafra
 from app.services.utils import process_uploaded_file, normalize_dataframe, handle_categorical_data
 from app.services.advanced_kmeans_service import determine_optimal_k
 
+# pylint: disable=too-many-arguments
+# pylint: disable=R0801
 def perform_advanced_nd_kmeans(
     file: UploadFile,
     distance_metric: str,
@@ -55,4 +57,3 @@ def perform_advanced_nd_kmeans(
         filename=filename
     )
     return result
-

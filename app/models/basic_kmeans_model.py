@@ -109,7 +109,8 @@ class KMeansResultND(BaseModel):
     - used_distance_metric (str): The distance metric used for clustering.
     - filename (str): Name of the file containing the data points.
     - k_value (int): Number of clusters used.
-    - important_features (Dict[str, float]): Dictionary of important features with their contributions.
+    - important_features (Dict[str, float]): Dictionary of: 
+                            important features with their contributions.
     """
     user_id: int
     request_id: int

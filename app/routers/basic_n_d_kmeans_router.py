@@ -12,6 +12,7 @@ router = APIRouter()
 
 @router.post("/perform-nd-kmeans/")
 # pylint: disable=too-many-arguments
+# pylint: disable=duplicate-code
 async def kmeans_nd(
     file: UploadFile = File(...),
     distance_metric: str = Query(

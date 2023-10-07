@@ -1,7 +1,7 @@
 """
-advanced_kmeans_service.py
---------------------------
-Service for performing KMeans clustering with automatic k determination using silhouette scores.
+advanced_3d_kmeans_service.py
+-----------------------------
+Service for performing 3D KMeans clustering with automatic k determination using silhouette scores.
 """
 
 from typing import Union
@@ -11,8 +11,8 @@ from fastapi import UploadFile
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
-from app.models.basic_kmeans_model import BasicKMeansResult
-from app.services.basic_kmeans_service import perform_kmeans_from_dataframe
+from app.models.basic_kmeans_model import KMeansResult3D
+from app.services.three_d_basic_kmeans_service import perform_3d_kmeans_from_dataframe
 from app.services.utils import process_uploaded_file
 
 # pylint: disable=duplicate-code
@@ -32,29 +32,26 @@ def determine_optimal_k(data_frame, max_clusters):
     return optimal_k
 
 # pylint: disable=too-many-arguments
-def perform_advanced_kmeans(
+def perform_advanced_3d_kmeans(
     file: UploadFile,
     distance_metric: str,
     kmeans_type: str,
     user_id: int,
     request_id: int,
     selected_columns: Union[None, list[int]] = None
-) -> BasicKMeansResult:
+) -> KMeansResult3D:
     """
-    Perform KMeans clustering on an uploaded file with automatic k determination.
+    Perform 3D KMeans clustering on an uploaded file with automatic k determination.
     """    
     # Process the uploaded file
     data_frame, filename = process_uploaded_file(file, selected_columns)
 
     # Determine the optimal k
-    max_clusters = min(int(0.25 * data_frame.shape[0]), 10)
+    max_clusters = min(int(0.25 * data_frame.shape[0]), 20)
     optimal_k = determine_optimal_k(data_frame, max_clusters)
-    
-    #print dataframe shape
-    print(data_frame.shape)
 
-    # Use the basic_kmeans_service with the determined optimal k
-    result = perform_kmeans_from_dataframe(
+    # Use the three_d_basic_kmeans_service with the determined optimal k
+    result = perform_3d_kmeans_from_dataframe(
         data_frame=data_frame,
         distance_metric=distance_metric,
         kmeans_type=kmeans_type,

@@ -16,9 +16,17 @@ from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
 from app.models.basic_kmeans_model import BasicKMeansResult, Cluster, Centroid
 from app.services.utils import process_uploaded_file
 
+from sklearn.preprocessing import StandardScaler
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    scaler = StandardScaler()
+    normalized_data = scaler.fit_transform(df)
+    normalized_df = pd.DataFrame(normalized_data, columns=df.columns)
+    return normalized_df
 
 
 def transform_to_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.ndarray) -> list:
@@ -86,7 +94,13 @@ def _perform_kmeans(
     k: int
 ) -> BasicKMeansResult:
     # Convert DataFrame to numpy array for clustering
+    
+    data_frame = normalize_dataframe(data_frame)
+    
     data_np = data_frame.values
+    
+    logger.info(data_np[:5])
+    
     logger.info("Converted data to numpy array. Shape: %s", data_np.shape)
 
     # Initialize the KMeans model

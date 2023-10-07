@@ -3,7 +3,7 @@ Hauptmodul der App.
 """
 
 from fastapi import FastAPI
-from app.routers import (clustering_router, 
+from app.routers import (all_in_one_clustering, 
                          basic_kmeans_router, 
                          elbow_router,
                          advanced_kmeans_router)
@@ -18,7 +18,7 @@ from app.routers import job_router
 app = FastAPI()
 
 # ----------------------- K-Means Router ------------------------------------------------
-app.include_router(clustering_router.router, prefix="/all_in_one", tags=["kmeans"])
+app.include_router(all_in_one_clustering.router, prefix="/all_in_one", tags=["kmeans"])
 
 
 
@@ -26,8 +26,8 @@ app.include_router(clustering_router.router, prefix="/all_in_one", tags=["kmeans
 app.include_router(basic_kmeans_router.router, prefix="/basic", tags=["2D kmeans"])
 app.include_router(advanced_kmeans_router.router, prefix="/advanced", tags=["2D kmeans"])
 
-
-
+# TODO: Nachdem das Frontend Team die neuen Router übernommen hat kann der hier raus!
+app.include_router(all_in_one_clustering.router, prefix="/clustering", tags=["clustering"])
 # ----------------------- Elbow Router --------------------------------------------------
 app.include_router(elbow_router.router, prefix="/determination", tags=["determination"])
 
@@ -41,7 +41,6 @@ app.include_router(classification_router_decision_tree.router,
 
 
 # ----------------------- Job Router ----------------------------------------------------
-app.include_router(clustering_router.router, prefix="/clustering", tags=["clustering"])
 app.include_router(job_router.router, prefix="/jobs", tags=["jobs"])
 
 

@@ -43,21 +43,21 @@ def manhattan_distance_matrix(matrix, centers):
     return np.sum(np.abs(matrix[:, np.newaxis] - centers), axis=2)
 
 
-@jit(nopython=True)
-def jaccard_distance_matrix(matrix, centers):
-    """
-    Calculate the Jaccard distance matrix between data points and cluster centers.
-
-    Args:
-    - matrix (numpy.ndarray): Data points.
-    - centers (numpy.ndarray): Cluster centers.
-
-    Returns:
-    - numpy.ndarray: Jaccard distance matrix.
-    """
-    intersection = np.minimum(matrix[:, np.newaxis], centers).sum(axis=2)
-    union = np.maximum(matrix[:, np.newaxis], centers).sum(axis=2)
-    return 1 - (intersection / union)
+#@jit(nopython=True)
+#def jaccard_distance_matrix(matrix, centers):
+#    """
+#    Calculate the Jaccard distance matrix between data points and cluster centers.
+#
+#    Args:
+#    - matrix (numpy.ndarray): Data points.
+#    - centers (numpy.ndarray): Cluster centers.
+#
+#    Returns:
+#    - numpy.ndarray: Jaccard distance matrix.
+#    """
+#    intersection = np.minimum(matrix[:, np.newaxis], centers).sum(axis=2)
+#    union = np.maximum(matrix[:, np.newaxis], centers).sum(axis=2)
+#    return 1 - (intersection / union)
 
 
 class BaseOptimizedKMeans:
@@ -67,8 +67,8 @@ class BaseOptimizedKMeans:
 
     supported_distance_metrics = {
         "EUCLIDEAN": euclidean_distance_matrix,
-        "MANHATTAN": manhattan_distance_matrix,
-        "JACCARDS": jaccard_distance_matrix
+        "MANHATTAN": manhattan_distance_matrix
+        #"JACCARDS": jaccard_distance_matrix
     }
 
     def __init__(self, number_clusters, distance_metric="EUCLIDEAN", max_iterations=300, tolerance=1e-4):

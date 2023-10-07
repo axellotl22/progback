@@ -41,8 +41,7 @@ async def kmeans(
     - n_clusters (int): Number of clusters.
     - user_id (int): User ID.
     - request_id (int): Request ID.
-    - auto_pca (bool): Flag to enable automatic PCA.
-
+    
     Returns:
     - KMeansResult: Result of the KMeans clustering.
     """

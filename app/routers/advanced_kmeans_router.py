@@ -38,7 +38,6 @@ async def advanced_kmeans(
     - kmeans_type (str): Type of KMeans model to use.
     - user_id (int): User ID.
     - request_id (int): Request ID.
-    - auto_pca (bool): Flag to enable automatic PCA.
 
     Returns:
     - KMeansResult: Result of the KMeans clustering.

@@ -3,16 +3,17 @@ Implementierung eines Decision Trees mit Customizing Funktionen:
 ...
 """
 from collections import Counter
+from typing import List
 import numpy as np
-from app.models.classification_model_decision_tree import FeatureNode, LeaveNode, SplitStrategy
-
+from app.models.classification_model_decision_tree import FeatureNode, LeaveNode
+from app.models.classification_model_decision_tree import SplitStrategy, BestSplitStrategy
 
 class CustomNode:
     """
     Node für Decision Tree
     """
     # pylint: disable=too-many-arguments
-    def __init__(self, feature_id=None, treshold=None, left=None, right=None,*,value=None):
+    def __init__(self, feature_id=None, treshold=None, left=None, right=None, *,value=None):
         """
         Initialisierung des Custum Nodes
         """
@@ -47,7 +48,9 @@ class CustomDecisionTree:
                  features_names=None, 
                  class_name=None, 
                  feature_weights=None, 
-                 split_strategy= None):
+                 split_strategy= None,
+                 best_split_strategy=None,
+                 feature_behaviour=None):
         """
         Initialisierung des Decision Trees
         """
@@ -61,8 +64,9 @@ class CustomDecisionTree:
         else:
             self.feature_weights= np.ones(features_count)  
         self.split_strategy = split_strategy 
-        self.split_strategy = split_strategy 
+        self.best_split_strategy = best_split_strategy 
         self.root=None
+        self.feature_behaviour=feature_behaviour
         
     def fit(self, x_vals, y_vals):
         """
@@ -72,7 +76,7 @@ class CustomDecisionTree:
         Features-Count = Anzahl an Spalten in Datenset
         Root=Oberster Knoten in Baum mit Verweis auf Kindsknoten
         """
-        if not self.features_count:
+        if self.features_count is None:
             self.features_count = x_vals.shape[1]
         else:
             self.features_count = min(x_vals.shape[1], self.features_count)
@@ -93,19 +97,22 @@ class CustomDecisionTree:
         if(depth>=self.max_depth or n_labels==1 or n_samples<self.min_samples_split):
             leaf_value=self.most_frequent_label(y_vals)
             return CustomNode(value=leaf_value)
-        
-        features = np.random.choice(n_feats, self.features_count, replace=False)
+        if self.feature_behaviour:
+            features = np.random.choice(n_feats, self.features_count, replace=True)
+        else:
+            features = np.random.choice(n_feats, self.features_count, replace=False)
         #Best Split ermitteln
         
-        best_feature, best_treshold = self.choose_split(x_vals, 
-                                                        y_vals, 
-                                                        features, 
-                                                        self.split_strategy)
+        best_feature, best_treshold = self.choose_split(x_vals=x_vals, 
+                                                        y_vals=y_vals, 
+                                                        features=features,
+                                                        strategy=self.split_strategy,
+                                                    best_split_strategy=self.best_split_strategy)
         #Aufbauen des Baums
         id_left, id_right = self.split(x_vals[:, best_feature], best_treshold)
         left = self.create_tree(x_vals[id_left, :], y_vals[id_left], depth+1)
         right = self.create_tree(x_vals[id_right, :], y_vals[id_right], depth+1)
-        return CustomNode(best_feature, best_treshold, left, right)
+        return CustomNode(feature_id=best_feature, treshold=best_treshold, left=left, right=right)
     
     def traverse_tree(self, x_vals, node):
         """
@@ -123,8 +130,8 @@ class CustomDecisionTree:
         Vorhersagen für Datenset treffen, durch ablaufen des Trees
         """
         return np.array([self.traverse_tree(x_val, self.root)for x_val in x_vals])
-    
-    def choose_split(self, x_vals, y_vals, features, strategy):
+    # # pylint: disable=too-many-branches, too-many-locals, too-many-function-args
+    def choose_split(self, x_vals, y_vals, features, strategy, best_split_strategy):
         """
         Geeignetsten Datensplit basierend auf gewünschter Methode finden
         """
@@ -133,6 +140,7 @@ class CustomDecisionTree:
 
         for feat in features:
             x_column = x_vals[:, feat]
+            feature_weight=self.feature_weights[feat]
             
             if strategy == SplitStrategy.MEDIAN:
                 treshold = np.median(x_column)
@@ -142,18 +150,37 @@ class CustomDecisionTree:
                 treshold = np.random.choice(x_column)
             else:  # Standardwert Best Split
                 tresholds = np.unique(x_column)
-                for treshold in tresholds:
-                    gain = self.calc_information_gain(y_vals, x_column, treshold)
-                    weighted_gain=self.feature_weights*gain
-                    if weighted_gain > best_gain:
-                        best_gain = weighted_gain
-                        split_number = feat
-                        split_treshold = treshold
+                
+                if best_split_strategy==BestSplitStrategy.ENTROPY:
+                    for treshold in tresholds:
+                        gain = self.calc_entropy(y_vals, x_column, treshold)
+                        weighted_gain=feature_weight*gain
+                        if weighted_gain < best_gain:
+                            best_gain = weighted_gain
+                            split_number = feat
+                            split_treshold = treshold                    
+                if best_split_strategy==BestSplitStrategy.GINI:
+                    for treshold in tresholds:
+                        gain = self.calc_gini(y_vals, x_column, treshold)
+                        weighted_gain=feature_weight*gain
+                        if weighted_gain < best_gain:
+                            best_gain = weighted_gain
+                            split_number = feat
+                            split_treshold = treshold                    
+                else:
+                    for treshold in tresholds:
+                        gain = self.calc_information_gain(y_vals, x_column, treshold)
+                        weighted_gain=feature_weight*gain
+                        if weighted_gain > best_gain:
+                            best_gain = weighted_gain
+                            split_number = feat
+                            split_treshold = treshold
                 continue  # Rest der Schleife überspringen
             
             gain = self.calc_information_gain(y_vals, x_column, treshold)
-            if gain > best_gain:
-                best_gain = gain
+            weighted_gain=feature_weight*gain
+            if weighted_gain > best_gain:
+                best_gain = weighted_gain
                 split_number = feat
                 split_treshold = treshold
 
@@ -177,7 +204,15 @@ class CustomDecisionTree:
         #Information Gain berechnen
         information_gain = parent_entropy-child_entropy
         return information_gain
-        
+    
+    def calc_gini(self, y_vals):
+        """
+        Berechnen des Gini Index
+        """
+        count_numbers = np.bincount(y_vals) #Array how often which number is used
+        p_vals = count_numbers/len(y_vals)
+        return 1-np.sum([p*p for p in p_vals if p>0])
+    
     def calc_entropy(self, y_vals):
         """
         Berechnen der Entropy
@@ -207,7 +242,7 @@ class CustomDecisionTree:
         """
         return self.root
     
-    def cnodes_2_node_structure(self, node=None):
+    def cnodes_2_node_structure(self, feature_names, node=None):
         """
         CustomNode in Node für Rückgabemodell transformieren
         """
@@ -215,13 +250,29 @@ class CustomDecisionTree:
             node = self.root
         if node.is_leave():
             return LeaveNode(value=node.value)
-        left_child = self.cnodes_2_node_structure(node.left)
-        right_child = self.cnodes_2_node_structure(node.right)
+        left_child = self.cnodes_2_node_structure(node=node.left, feature_names=feature_names)
+        right_child = self.cnodes_2_node_structure(node=node.right, feature_names=feature_names)
+        feature_id_name = feature_names[node.feature_id]
         return FeatureNode(feature_id=node.feature_id, 
                            treshold=node.treshold, 
                            left=left_child, 
                            right=right_child, 
-                           feature_name=f"Is feature {node.feature_id} <= {node.treshold}?")
+                           feature_id_name=feature_id_name,
+    feature_name=f"Is feature {feature_id_name}(f_id: {node.feature_id}) <= {node.treshold}?")
+        
+    def confusion_matrix(self, y_true, y_pred) -> List[List[int]]:
+        """
+        Gibt die Confusion Matrix für gegebene Daten zurück.
+        """
+        unique_labels = np.unique(np.concatenate((y_true, y_pred)))
+        n_labels = len(unique_labels)
+        matrix = np.zeros((n_labels, n_labels), dtype=int)
+        for true, pred in zip(y_true, y_pred):
+            i = np.where(unique_labels == true)[0][0]
+            j = np.where(unique_labels == pred)[0][0]
+            matrix[i][j] += 1
+        
+        return matrix.tolist()
 
     def node_error(self, y_vals):
         """
@@ -235,11 +286,10 @@ class CustomDecisionTree:
         """
         
         most_common_label = self.most_frequent_label(y_vals)
-        #error = sum([1 for label in y_vals if label != most_common_label])
         error = sum(1 for label in y_vals if label != most_common_label)
         return error
 
-    def prune(self, node: CustomNode, x_vals, y_vals):
+    def prune(self, x_vals, y_vals, node=None):
         """
         Stutzt den Baum rekursiv, um Overfitting zu verhindern.
 
@@ -248,20 +298,25 @@ class CustomDecisionTree:
         - X: Die Eingabedaten.
         - y: Die Zielwerte.
         """
-        if node.is_leave():
-            return 
-        id_left, id_right = self.split(x_vals[:, node.feature_id], node.treshold)
-        if node.left:
-            self.prune(node.left, x_vals[id_left], y_vals[id_left])
-        if node.right:
-            self.prune(node.right, x_vals[id_right], y_vals[id_right])
-        if node.left.is_leave() and node.right.is_leave():
-            error_without_prune = self.node_error(y_vals)
-            error_with_prune = self.node_error(y_vals[id_left]) + self.node_error(y_vals[id_right])     
-            if error_with_prune < error_without_prune:
-                node.left = None
-                node.right = None
-                node.value = self.most_frequent_label(y_vals) 
-    
-    
-    
+
+        if isinstance(node, CustomNode):
+            if node is None:
+                node = self.root
+            if node.is_leave():
+                return 
+            id_l, id_r = self.split(x_vals[:, node.feature_id], node.treshold)
+            if node.left:
+                self.prune(node.left, x_vals[id_l], y_vals[id_l])
+            if node.right:
+                self.prune(node.right, x_vals[id_r], y_vals[id_r])
+        
+            if isinstance(node.left, CustomNode) and isinstance(node.right, CustomNode):
+                if node.left.is_leave() and node.right.is_leave():
+                    error_without_prune = self.node_error(y_vals)
+                    error_with_prune =self.node_error(y_vals[id_l])+self.node_error(y_vals[id_r])     
+                    if error_with_prune < error_without_prune:
+                        node.left = None
+                        node.right = None
+                        node.value = self.most_frequent_label(y_vals) 
+       
+  

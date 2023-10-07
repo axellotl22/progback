@@ -1,5 +1,5 @@
 """
-elbow_method_service.py
+elbow_service.py
 -----------------------
 This module contains functions for running the KMeans Elbow method.
 """

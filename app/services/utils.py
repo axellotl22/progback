@@ -8,6 +8,7 @@ from typing import List, Union
 
 from fastapi import HTTPException, UploadFile
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
 # Constants in uppercase
 CSV = '.csv'
@@ -173,3 +174,18 @@ def process_uploaded_file(file: UploadFile,
 
     delete_file(temp_file_path)
     return data_frame, file.filename
+
+def handle_categorical_data(data_frame: pd.DataFrame) -> pd.DataFrame:
+    """
+    Convert categorical and boolean columns to numerical format using one-hot encoding.
+    """
+    return pd.get_dummies(data_frame, drop_first=True)
+
+def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normalize the data using StandardScaler.
+    """
+    scaler = StandardScaler()
+    normalized_data = scaler.fit_transform(df)
+    normalized_df = pd.DataFrame(normalized_data, columns=df.columns)
+    return normalized_df

@@ -12,10 +12,9 @@ import pandas as pd
 from fastapi import UploadFile
 
 from app.models.basic_kmeans_model import KMeansResultND
-from app.services.n_d_basic_kmeans_service import perform_nd_kmeans_from_dataframe, handle_categorical_data
-from app.services.utils import process_uploaded_file
+from app.services.n_d_basic_kmeans_service import perform_nd_kmeans_from_dataframe
+from app.services.utils import process_uploaded_file, normalize_dataframe, handle_categorical_data
 from app.services.advanced_kmeans_service import determine_optimal_k
-from app.services.basic_kmeans_service import normalize_dataframe
 
 def perform_advanced_nd_kmeans(
     file: UploadFile,

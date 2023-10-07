@@ -12,24 +12,13 @@ from typing import Optional, Union
 import pandas as pd
 import numpy as np
 from fastapi import UploadFile
-from sklearn.preprocessing import StandardScaler
 
 from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
 from app.models.basic_kmeans_model import BasicKMeansResult, Cluster, Centroid
-from app.services.utils import process_uploaded_file
+from app.services.utils import process_uploaded_file,normalize_dataframe, handle_categorical_data
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Normalize the data using StandardScaler.
-    """
-    scaler = StandardScaler()
-    normalized_data = scaler.fit_transform(df)
-    normalized_df = pd.DataFrame(normalized_data, columns=df.columns)
-    return normalized_df
-
 
 def transform_to_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.ndarray) -> list:
     """
@@ -98,7 +87,7 @@ def _perform_kmeans(
     request_id: int,
     k: int
 ) -> BasicKMeansResult:
-    # Convert DataFrame to numpy array for clustering
+    data_frame=handle_categorical_data(data_frame)
     
     data_frame = normalize_dataframe(data_frame)
     

@@ -13,18 +13,10 @@ from fastapi import UploadFile
 from sklearn.decomposition import PCA
 from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
 from app.models.basic_kmeans_model import KMeansResultND, Cluster, Centroid
-from app.services.utils import process_uploaded_file
-from app.services.basic_kmeans_service import normalize_dataframe
+from app.services.utils import process_uploaded_file, normalize_dataframe, handle_categorical_data
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-
-def handle_categorical_data(data_frame: pd.DataFrame) -> pd.DataFrame:
-    """
-    Convert categorical and boolean columns to numerical format using one-hot encoding.
-    """
-    return pd.get_dummies(data_frame, drop_first=True)
 
 
 def transform_to_2d_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.ndarray) -> list:

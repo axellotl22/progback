@@ -9,7 +9,8 @@ from app.routers import (all_in_one_clustering,
                          advanced_kmeans_router,
                          basic_three_d_kmeans_router,
                          advanced_three_d_kmeans_router,
-                         basic_n_d_kmeans_router)
+                         basic_n_d_kmeans_router,
+                         advanced_n_d_kmeans_router)
 
 from app.database import user_db, job_db
 from app.routers import classification_router_decision_tree
@@ -41,7 +42,7 @@ app.include_router(advanced_three_d_kmeans_router.router, prefix="/advanced", ta
 
 # ----------------------- nD kmeans Routers ---------------------------------------------
 app.include_router(basic_n_d_kmeans_router.router, prefix="/basic", tags=["multi D kmeans"])
-
+app.include_router(advanced_n_d_kmeans_router.router, prefix="/advanced", tags=["multi D kmeans"])
 
 
 # ----------------------- Elbow Router --------------------------------------------------

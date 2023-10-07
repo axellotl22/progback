@@ -3,62 +3,31 @@ Services for clustering functions.
 """
 
 import logging
-from joblib import Parallel, delayed
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
 from .clustering_algorithms import CustomKMeans
 from .utils import clean_dataframe, select_columns
+from .elbow_service import run_standard_elbow_method
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def calculate_elbow(data_frame, max_clusters):
+def calculate_elbow(file_path):
     """
-    Determines optimal number of clusters using elbow method.
-
-    Elbow method looks at within cluster sum of squares (WCSS) 
-    for different values of k. The optimal k is at the "elbow"
-    where the curve bends.
-
-    Args:
-    - data_frame (DataFrame): Data for clustering
-    - max_clusters (int): Maximum number of clusters to check
-
-    Returns:
-    - int: Optimal number of clusters based on elbow method
+    Determines optimal number of clusters using elbow.
     """
-
-    # Calculate WCSS for range of clusters
-    wcss = [KMeans(n_clusters=i, init='k-means++',
-                   max_iter=300, n_init=10,
-                   random_state=0).fit(data_frame).inertia_
-            for i in range(1, max_clusters+1)]
-
-    # Take second order difference of WCSS
-    differences = np.diff(wcss, n=2)
-
-    # Optimal k is at minimum of second order differences
-    # Add 3 because we took second order differences
-    return np.argmin(differences) + 3
-
+    results = run_standard_elbow_method(file_path=file_path)
+    optimal_clusters = int(results.recommended_point.x)
+    return optimal_clusters + 1
+    
+    
 
 def calculate_silhouette(data_frame, max_clusters):
     """
     Determines optimal number of clusters using silhouette score.
-
-    Silhouette score measures how well samples are clustered. 
-    Score is between -1 and 1, with a higher score indicating
-    better clustering.
-
-    Args:
-    - data_frame (DataFrame): Data for clustering 
-    - max_clusters (int): Max number of clusters to check
-
-    Returns:
-    - int: Optimal number of clusters based on silhouette score
     """
 
     # Calculate silhouette scores for different k
@@ -78,14 +47,6 @@ def calculate_silhouette(data_frame, max_clusters):
 def perform_clustering(data_frame, num_clusters, distance_metric="EUCLIDEAN"):
     """
     Performs clustering and returns results.
-
-    Args:
-    - data_frame (DataFrame): Data for clustering
-    - num_clusters (int): Number of clusters
-    - distance_metric (string): Distance metric to use
-
-    Returns:
-    - dict: Results of clustering
     """
 
     # Create CustomKMeans model
@@ -120,9 +81,9 @@ def perform_clustering(data_frame, num_clusters, distance_metric="EUCLIDEAN"):
 
     return results
 
-
+# pylint: disable=too-many-arguments
 def process_and_cluster(data_frame, method="ELBOW", distance_metric="EUCLIDEAN",
-                        columns=None, num_clusters=None):
+                        columns=None, num_clusters=None, file_path=None):
     """
     Processes data frame and performs clustering.
 
@@ -132,11 +93,12 @@ def process_and_cluster(data_frame, method="ELBOW", distance_metric="EUCLIDEAN",
     - distance_metric (str): Distance metric for clustering
     - columns (list): Columns to use for clustering
     - num_clusters (int): Specified number of clusters
+    - file_path (str): File path for elbow method (if needed)
 
     Returns:
     - dict: Results of clustering 
     """
-
+    
     # Clean and select columns
     data_frame = clean_dataframe(data_frame)
     if columns:
@@ -145,25 +107,25 @@ def process_and_cluster(data_frame, method="ELBOW", distance_metric="EUCLIDEAN",
     # Get max clusters to try
     max_clusters = min(int(0.25 * data_frame.shape[0]), 50)
 
-    # Calculate optimal clusters for both methods
-    methods = [calculate_elbow, calculate_silhouette]
-    results = Parallel(n_jobs=-1)(delayed(method)(data_frame, max_clusters)
-                                  for method in methods)
+    # Calculate optimal clusters using both methods
+    optimal_clusters_elbow = calculate_elbow(file_path)
+    optimal_clusters_silhouette = calculate_silhouette(data_frame, max_clusters)
 
-    # Store optimal clusters
-    optimal_clusters_methods = {
-        "ELBOW": results[0],
-        "SILHOUETTE": results[1]
-    }
-
-    # Use provided num_clusters if given
-    optimal_clusters = num_clusters if num_clusters else optimal_clusters_methods[method]
+    # Use provided num_clusters if given, else choose based on specified method
+    if num_clusters:
+        optimal_clusters = num_clusters
+    elif method == "ELBOW":
+        optimal_clusters = optimal_clusters_elbow
+    elif method == "SILHOUETTE":
+        optimal_clusters = optimal_clusters_silhouette
+    else:
+        raise ValueError("Invalid method provided. Choose either 'ELBOW' or 'SILHOUETTE'.")
 
     # Perform clustering
     result = perform_clustering(data_frame, optimal_clusters, distance_metric)
 
     # Add optimal cluster values to result
-    result["clusters_elbow"] = results[0]
-    result["clusters_silhouette"] = results[1]
+    result["clusters_elbow"] = optimal_clusters_elbow
+    result["clusters_silhouette"] = optimal_clusters_silhouette
 
     return result

@@ -66,11 +66,12 @@ async def perform_kmeans_clustering(
     # Process file
     columns = [column1, column2] if column1 and column2 else None
     file_path = save_temp_file(file, TEMP_FILES_DIR)
+    
 
     try:
         data_frame = load_dataframe(file_path)
         results = process_and_cluster(data_frame, cluster_count_determination,
-                                      distance_metric, columns, k_cluster)
+                                      distance_metric, columns, k_cluster, file_path)
 
         # Return clustering result model
         return ClusterResult(

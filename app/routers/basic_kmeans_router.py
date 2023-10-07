@@ -13,19 +13,19 @@ router = APIRouter()
 
 @router.post("/perform-2d-kmeans/")
 # pylint: disable=too-many-arguments
-
+# pylint: disable=R0801
 async def kmeans(
     file: UploadFile = File(...),
-    column_1: int = Query(0, alias="Column 1",
+    column1: int = Query(0,
                           description="Index of the first column"),
-    column_2: int = Query(1, alias="Column 2",
+    column2: int = Query(1,
                           description="Index of the second column"),
     distance_metric: str = Query(
             "EUCLIDEAN",
             description="/".join(BaseOptimizedKMeans.supported_distance_metrics.keys())),
     kmeans_type: str = Query("OptimizedKMeans",
                              description="OptimizedKMeans/OptimizedMiniBatchKMeans"),
-    n_clusters: int = Query(2, description="Number of clusters"),
+    k_clusters: int = Query(2, description="Number of clusters"),
     user_id: int = Query(0, description="User ID"),
     request_id: int = Query(0, description="Request ID")
 ):
@@ -48,12 +48,12 @@ async def kmeans(
     try:
         kmeans_result = perform_kmeans_from_file(
             file=file,
-            user_k=n_clusters,
+            user_k=k_clusters,
             distance_metric=distance_metric,
             kmeans_type=kmeans_type,
             user_id=user_id,
             request_id=request_id,
-            selected_columns=[column_1, column_2]
+            selected_columns=[column1, column2]
         )
         # Return the KMeansResult object.
         return kmeans_result

@@ -25,11 +25,16 @@ def transform_to_3d_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.
     clusters_list = []
 
     for cluster_id in range(cluster_centers.shape[0]):
-        cluster_points = data_frame[data_frame["cluster"] == cluster_id].drop(
-            columns=["cluster"]).to_dict(orient="records")
+        cluster_data = data_frame[data_frame["cluster"] == cluster_id].drop(columns=[
+                                                                            "cluster"])
+
+        # Transform points to always have "x", "y", and "z" as keys
+        cluster_points = [{"x": row[0], "y": row[1], "z": row[2]}
+                          for _, row in cluster_data.iterrows()]
+
         clusters_list.append(
             Cluster3D(
-                cluster_nr=cluster_id,
+                clusterNr=cluster_id,
                 centroid=Centroid3D(
                     x=cluster_centers[cluster_id][0],
                     y=cluster_centers[cluster_id][1],
@@ -41,6 +46,7 @@ def transform_to_3d_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.
     return clusters_list
 
 
+# pylint: disable=too-many-arguments
 def perform_3d_kmeans_from_file(
     file: UploadFile,
     distance_metric: str,
@@ -55,11 +61,14 @@ def perform_3d_kmeans_from_file(
     """
     data_frame, filename = process_uploaded_file(file, selected_columns)
     logger.info("Processed uploaded file. Shape: %s", data_frame.shape)
-    return _perform_3d_kmeans(data_frame, filename, distance_metric, kmeans_type, user_id, request_id, user_k)
+    return _perform_3d_kmeans(data_frame, filename, distance_metric,
+                              kmeans_type, user_id, request_id, user_k)
+
+# pylint: disable=too-many-arguments
 
 
 def perform_3d_kmeans_from_dataframe(
-    df: pd.DataFrame,
+    data_frame: pd.DataFrame,
     filename: str,
     distance_metric: str,
     kmeans_type: str,
@@ -70,9 +79,11 @@ def perform_3d_kmeans_from_dataframe(
     """
     Perform 3D KMeans clustering on a DataFrame.
     """
-    return _perform_3d_kmeans(df, filename, distance_metric, kmeans_type, user_id, request_id, advanced_k)
+    return _perform_3d_kmeans(data_frame, filename, distance_metric,
+                              kmeans_type, user_id, request_id, advanced_k)
 
-
+# pylint: disable=R0801
+# pylint: disable=too-many-arguments
 def _perform_3d_kmeans(
     data_frame: pd.DataFrame,
     filename: str,
@@ -106,7 +117,8 @@ def _perform_3d_kmeans(
     logger.info("Assigned labels to data.")
 
     # Transform the results to the 3D Cluster model structure
-    clusters = transform_to_3d_cluster_model(data_frame, model.cluster_centers_)
+    clusters = transform_to_3d_cluster_model(
+        data_frame, model.cluster_centers_)
     logger.info("Transformed data to 3D Cluster models.")
 
     x_label = data_frame.columns[0]
@@ -117,12 +129,12 @@ def _perform_3d_kmeans(
     return KMeansResult3D(
         user_id=user_id,
         request_id=request_id,
-        clusters=clusters,
+        cluster=clusters,
         x_label=x_label,
         y_label=y_label,
         z_label=z_label,
         iterations=model.iterations_,
         used_distance_metric=distance_metric,
-        filename=filename,
+        name=filename,
         k_value=k
     )

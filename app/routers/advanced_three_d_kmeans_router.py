@@ -4,6 +4,7 @@ advanced_three_d_kmeans_router.py
 API router for performing advanced 3D KMeans clustering with automatic k determination.
 """
 
+
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from app.services.three_d_advanced_kmeans_service import perform_advanced_3d_kmeans
 from app.services.custom_kmeans import BaseOptimizedKMeans
@@ -12,13 +13,14 @@ router = APIRouter()
 
 @router.post("/perform-advanced-3d-kmeans/")
 # pylint: disable=too-many-arguments
+# pylint: disable=duplicate-code
 async def advanced_kmeans_3d(
     file: UploadFile = File(...),
-    column_1: int = Query(0, alias="Column 1",
+    column1: int = Query(0, alias="Column 1",
                           description="Index of the first column"),
-    column_2: int = Query(1, alias="Column 2",
+    column2: int = Query(1, alias="Column 2",
                           description="Index of the second column"),
-    column_3: int = Query(2, alias="Column 3",
+    column3: int = Query(2, alias="Column 3",
                           description="Index of the third column"),
     distance_metric: str = Query(
             "EUCLIDEAN",
@@ -51,7 +53,7 @@ async def advanced_kmeans_3d(
             kmeans_type=kmeans_type,
             user_id=user_id,
             request_id=request_id,
-            selected_columns=[column_1, column_2, column_3]
+            selected_columns=[column1, column2, column3]
         )
         # Return the KMeansResult3D object.
         return kmeans_result_3d

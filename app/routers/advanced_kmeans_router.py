@@ -15,9 +15,9 @@ router = APIRouter()
 
 async def advanced_kmeans(
     file: UploadFile = File(...),
-    column_1: int = Query(0, alias="Column 1",
+    column1: int = Query(0,
                           description="Index of the first column"),
-    column_2: int = Query(1, alias="Column 2",
+    column2: int = Query(1,
                           description="Index of the second column"),
     distance_metric: str = Query(
             "EUCLIDEAN",
@@ -49,7 +49,7 @@ async def advanced_kmeans(
             kmeans_type,
             user_id,
             request_id,
-            selected_columns=[column_1, column_2]
+            selected_columns=[column1, column2]
         )
         # Return the KMeansResult object.
         return kmeans_result

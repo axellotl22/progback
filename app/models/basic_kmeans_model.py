@@ -53,7 +53,7 @@ class Cluster(BaseModel):
     - centroid (Centroid): The centroid of the cluster.
     - points (List[Dict[str, float]]): List of points within the cluster.
     """
-    cluster_nr: int
+    clusterNr: int
     centroid: Centroid
     points: List[Dict[str, float]]
 
@@ -77,7 +77,7 @@ class ClusterND(BaseModel):
     - centroid (CentroidND): The centroid of the cluster in nD.
     - points (List[Dict[str, float]]): List of points within the cluster.
     """
-    cluster_nr: int
+    clusterNr: int
     centroid: CentroidND
     points: List[Dict[str, float]]
 
@@ -99,12 +99,12 @@ class BasicKMeansResult(BaseModel):
     """
     user_id: int
     request_id: int
-    clusters: List[Cluster]
+    cluster: List[Cluster]
     x_label: str
     y_label: str
     iterations: int
     used_distance_metric: str
-    filename: str
+    name: str
     k_value: int
 
 
@@ -116,7 +116,7 @@ class KMeansResult3D(BasicKMeansResult):
     - z_label (str): Label for the Z-coordinate.
     """
     z_label: str
-    clusters: List[Cluster3D]
+    cluster: List[Cluster3D]
 
 
 class KMeansResultND(BasicKMeansResult):
@@ -127,4 +127,4 @@ class KMeansResultND(BasicKMeansResult):
     - labels (List[str]): Labels for all dimensions.
     """
     labels: List[str]
-    clusters: List[ClusterND]
+    cluster: List[ClusterND]

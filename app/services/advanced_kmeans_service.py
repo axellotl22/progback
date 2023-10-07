@@ -55,7 +55,7 @@ def perform_advanced_kmeans(
 
     # Use the basic_kmeans_service with the determined optimal k
     result = perform_kmeans_from_dataframe(
-        df=data_frame,
+        data_frame=data_frame,
         distance_metric=distance_metric,
         kmeans_type=kmeans_type,
         user_id=user_id,

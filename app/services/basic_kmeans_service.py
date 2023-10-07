@@ -12,17 +12,19 @@ from typing import Optional, Union
 import pandas as pd
 import numpy as np
 from fastapi import UploadFile
+from sklearn.preprocessing import StandardScaler
+
 from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
 from app.models.basic_kmeans_model import BasicKMeansResult, Cluster, Centroid
 from app.services.utils import process_uploaded_file
-
-from sklearn.preprocessing import StandardScaler
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normalize the data using StandardScaler.
+    """
     scaler = StandardScaler()
     normalized_data = scaler.fit_transform(df)
     normalized_df = pd.DataFrame(normalized_data, columns=df.columns)
@@ -36,11 +38,14 @@ def transform_to_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.nda
     clusters_list = []
 
     for cluster_id in range(cluster_centers.shape[0]):
-        cluster_points = data_frame[data_frame["cluster"] == cluster_id].drop(
-            columns=["cluster"]).to_dict(orient="records")
+        cluster_data = data_frame[data_frame["cluster"] == cluster_id].drop(columns=["cluster"])
+        
+        # Transform points to always have "x" and "y" as keys
+        cluster_points = [{"x": row[0], "y": row[1]} for _, row in cluster_data.iterrows()]
+        
         clusters_list.append(
             Cluster(
-                cluster_nr=cluster_id,
+                clusterNr=cluster_id,
                 centroid=Centroid(
                     x=cluster_centers[cluster_id][0], y=cluster_centers[cluster_id][1]),
                 points=cluster_points
@@ -69,7 +74,7 @@ def perform_kmeans_from_file(
 
 
 def perform_kmeans_from_dataframe(
-    df: pd.DataFrame,
+    data_frame: pd.DataFrame,
     filename: str,
     distance_metric: str,
     kmeans_type: str,
@@ -80,10 +85,10 @@ def perform_kmeans_from_dataframe(
     """
     Perform KMeans clustering on a DataFrame.
     """
-    return _perform_kmeans(df, filename, distance_metric, 
+    return _perform_kmeans(data_frame, filename, distance_metric, 
                            kmeans_type, user_id, request_id, advanced_k)
 
-
+# pylint: disable=R0801
 def _perform_kmeans(
     data_frame: pd.DataFrame,
     filename: str,
@@ -132,11 +137,11 @@ def _perform_kmeans(
     return BasicKMeansResult(
         user_id=user_id,
         request_id=request_id,
-        clusters=clusters,
+        cluster=clusters,
         x_label=x_label,
         y_label=y_label,
         iterations=model.iterations_,
         used_distance_metric=distance_metric,
-        filename=filename,
+        name=filename,
         k_value=k
     )

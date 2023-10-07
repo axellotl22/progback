@@ -52,7 +52,7 @@ def perform_advanced_3d_kmeans(
 
     # Use the three_d_basic_kmeans_service with the determined optimal k
     result = perform_3d_kmeans_from_dataframe(
-        df=data_frame,
+        data_frame=data_frame,
         distance_metric=distance_metric,
         kmeans_type=kmeans_type,
         user_id=user_id,

@@ -25,7 +25,7 @@ async def kmeans(
             description="/".join(BaseOptimizedKMeans.supported_distance_metrics.keys())),
     kmeans_type: str = Query("OptimizedKMeans",
                              description="OptimizedKMeans/OptimizedMiniBatchKMeans"),
-    k_clusters: int = Query(2, description="Number of clusters"),
+    k_clusters: int = Query(2, alias="kCluster", description="Number of clusters"),
     user_id: int = Query(0, description="User ID"),
     request_id: int = Query(0, description="Request ID")
 ):

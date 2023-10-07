@@ -44,7 +44,7 @@ def calculate_elbow(data_frame, max_clusters):
     # Add 3 because we took second order differences
     return np.argmin(differences) + 3
 
-
+# pylint: disable=duplicate-code
 def calculate_silhouette(data_frame, max_clusters):
     """
     Determines optimal number of clusters using silhouette score.

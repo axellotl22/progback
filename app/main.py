@@ -26,7 +26,8 @@ app.include_router(all_in_one_clustering.router, prefix="/all_in_one", tags=["km
 app.include_router(basic_kmeans_router.router, prefix="/basic", tags=["2D kmeans"])
 app.include_router(advanced_kmeans_router.router, prefix="/advanced", tags=["2D kmeans"])
 
-# TODO: Nachdem das Frontend Team die neuen Router übernommen hat kann der hier raus!
+
+# This comment can be removed once the frontend team has taken over the new routers.
 app.include_router(all_in_one_clustering.router, prefix="/clustering", tags=["clustering"])
 # ----------------------- Elbow Router --------------------------------------------------
 app.include_router(elbow_router.router, prefix="/determination", tags=["determination"])

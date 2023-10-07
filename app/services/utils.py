@@ -150,9 +150,11 @@ def handle_errors(error):
     logging.error("Error processing file: %s", error)
     raise HTTPException(500, "Error processing file") from error
 
-def process_uploaded_file(file: UploadFile, selected_columns: Union[None, list[int]] = None) -> (pd.DataFrame, str):
+def process_uploaded_file(file: UploadFile, 
+                          selected_columns: Union[None, list[int]] = None) -> (pd.DataFrame, str):
     """
-    Load, save, clean, and optionally select specific columns from the uploaded file. Returns the cleaned dataframe and filename.
+    Load, save, clean, and optionally select specific columns from the uploaded file. 
+    Returns the cleaned dataframe and filename.
 
     Args:
     - file (UploadFile): Uploaded data file.

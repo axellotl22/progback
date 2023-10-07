@@ -12,6 +12,7 @@ from numba import jit
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
 @jit(nopython=True)
 def euclidean_distance_matrix(matrix, centers):
     """
@@ -43,8 +44,8 @@ def manhattan_distance_matrix(matrix, centers):
     return np.sum(np.abs(matrix[:, np.newaxis] - centers), axis=2)
 
 
-#@jit(nopython=True)
-#def jaccard_distance_matrix(matrix, centers):
+# @jit(nopython=True)
+# def jaccard_distance_matrix(matrix, centers):
 #    """
 #    Calculate the Jaccard distance matrix between data points and cluster centers.
 #
@@ -68,10 +69,11 @@ class BaseOptimizedKMeans:
     supported_distance_metrics = {
         "EUCLIDEAN": euclidean_distance_matrix,
         "MANHATTAN": manhattan_distance_matrix
-        #"JACCARDS": jaccard_distance_matrix
+        # "JACCARDS": jaccard_distance_matrix
     }
 
-    def __init__(self, number_clusters, distance_metric="EUCLIDEAN", max_iterations=300, tolerance=1e-4):
+    def __init__(self, number_clusters, distance_metric="EUCLIDEAN",
+                 max_iterations=300, tolerance=1e-4):
         self.number_clusters = number_clusters
         self.max_iterations = max_iterations
         self.tolerance = tolerance
@@ -86,19 +88,16 @@ class BaseOptimizedKMeans:
     def fit(self, data_points):
         """
         Fit the KMeans clustering model.
-
-        Args:
-        - data_points (numpy.ndarray): Data points to fit.
-        - variance_threshold (float): Threshold for the explained variance for PCA. Defaults to 0.95.
         """
         logger.info("Starting fit method.")
 
         # Initial cluster centers using KMeans
-        kmeans = KMeans(n_clusters=self.number_clusters, init='k-means++', max_iter=1, n_init=1)
+        kmeans = KMeans(n_clusters=self.number_clusters,
+                        init='k-means++', max_iter=1, n_init=1)
         kmeans.fit(data_points)
         self.cluster_centers_ = kmeans.cluster_centers_
-        logger.info("Initialized cluster centers with KMeans. Cluster centers shape: %s", str(self.cluster_centers_.shape))
-
+        logger.info("Initialized cluster centers with KMeans. Cluster centers shape: %s", str(
+            self.cluster_centers_.shape))
 
         for iteration in range(self.max_iterations):
             if np.any(np.isnan(data_points)):
@@ -108,7 +107,8 @@ class BaseOptimizedKMeans:
                 logger.error("NaN values detected in cluster_centers!")
                 return
 
-            logger.info("Starting loop iteration: %d of %d", iteration + 1, self.max_iterations)
+            logger.info("Starting loop iteration: %d of %d",
+                        iteration + 1, self.max_iterations)
 
             logger.info("Calculating distances...")
             distances = self.distance(data_points, self.cluster_centers_)
@@ -128,28 +128,35 @@ class BaseOptimizedKMeans:
                 break
 
             if np.all(np.abs(new_centers - self.cluster_centers_) < self.tolerance):
-                logger.info("Convergence reached after %d iterations.", iteration)
+                logger.info(
+                    "Convergence reached after %d iterations.", iteration)
                 break
 
             self.cluster_centers_ = new_centers
             self.iterations_ += 1
-            logger.info("Finished iteration %d. Updated cluster centers.", iteration)
+            logger.info(
+                "Finished iteration %d. Updated cluster centers.", iteration)
         else:
             logger.warning("Max iterations reached. Possible non-convergence.")
 
-        
     def assign_labels(self, data_points):
+        """
+        Assign labels to data points based on the fitted model.
+        """
         logger.info("Starting assign_labels method.")
-        
+
         # Log the shape of the data_points for better clarity
-        logger.info("Received data_points with shape: %s", str(data_points.shape))
+        logger.info("Received data_points with shape: %s",
+                    str(data_points.shape))
 
         # Calculate distances
         try:
             distances = self.distance(data_points, self.cluster_centers_)
-            logger.info("Calculated distances. Shape: %s", str(distances.shape))
+            logger.info("Calculated distances. Shape: %s",
+                        str(distances.shape))
         except Exception as exception:
-            logger.error("Error while calculating distances: %s", str(exception))
+            logger.error("Error while calculating distances: %s",
+                         str(exception))
             raise exception
 
         # Assign labels based on distances
@@ -173,21 +180,22 @@ class OptimizedMiniBatchKMeans(BaseOptimizedKMeans):
     """
     Optimized Mini-Batch K-Means clustering with specified distance metric.
     """
-
-    def __init__(self, number_clusters, distance_metric="EUCLIDEAN", 
+    # pylint: disable=too-many-arguments
+    def __init__(self, number_clusters, distance_metric="EUCLIDEAN",
                  batch_size=100, max_iterations=300, tolerance=1e-4):
         super().__init__(number_clusters, distance_metric, max_iterations, tolerance)
         self.batch_size = batch_size
 
     def fit(self, data_points):
 
-
-        kmeans = KMeans(n_clusters=self.number_clusters, init='k-means++', max_iter=1, n_init=1)
+        kmeans = KMeans(n_clusters=self.number_clusters,
+                        init='k-means++', max_iter=1, n_init=1)
         kmeans.fit(data_points)
         self.cluster_centers_ = kmeans.cluster_centers_
 
         for _ in range(self.max_iterations):
-            indices = np.random.choice(data_points.shape[0], self.batch_size, replace=False)
+            indices = np.random.choice(
+                data_points.shape[0], self.batch_size, replace=False)
             mini_batch = data_points[indices]
 
             distances = np.array([[self.distance(point, center)

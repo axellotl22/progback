@@ -31,21 +31,16 @@ Progback/
 │
 ├── app/                          # Hauptanwendungsverzeichnis
 │ ├── routers/                    # FastAPI-Endpunkte
-│ │ ├── clustering_router.py      # Endpunkt für das Hochladen und Clustern von Dateien
+│ │
 │ ├── models/                     # Datenmodelle und -schemata
-│ │ ├── clustering_model.py       # Modelle für Eingabe-/Ausgabedaten
+│ │
 │ ├── services/                   # Dienstprogramme und Services
-│ │ ├── clustering_algorithms.py  # Modifizierter K-Means mit variabler Ditanzberechnung
-│ │ ├── clustering_service.py     # Dienstprogramme für KMeans-Clustering 
-│ │ ├── utils_service.py          # Hilfsprogramme
 │ │   
 │ └── main.py                     # Hauptanwendungsdatei
 │
 ├── temp_files/                   # Verzeichnis für hochgeladene Dateien 
 │
 ├── tests/                        # Testverzeichnis
-│ ├── __init__.py
-│ ├── test_app.py                 # Haupttestdatei
 │
 ├── .github/                      # GitHub-spezifische Dateien
 │ └── workflows/                  # CI/CD-Workflows

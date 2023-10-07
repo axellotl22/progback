@@ -4,27 +4,21 @@ advanced_kmeans_service.py
 Service for performing KMeans clustering with automatic k determination using silhouette scores.
 """
 
-from fastapi import UploadFile
 from typing import Union
-from sklearn.metrics import silhouette_score
-from app.models.basic_kmeans_model import BasicKMeansResult
-from app.services.utils import process_uploaded_file
-from app.services.basic_kmeans_service import perform_kmeans_from_dataframe
 
 import numpy as np
+from fastapi import UploadFile
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
+from app.models.basic_kmeans_model import BasicKMeansResult
+from app.services.basic_kmeans_service import perform_kmeans_from_dataframe
+from app.services.utils import process_uploaded_file
+
+# pylint: disable=duplicate-code
 def determine_optimal_k(data_frame, max_clusters):
     """
     Determine the optimal number of clusters using silhouette score.
-
-    Args:
-    - data_frame (DataFrame): Data for clustering
-    - max_clusters (int): Maximum number of clusters to consider
-
-    Returns:
-    - int: Optimal number of clusters based on silhouette score
     """
     silhouette_scores = [silhouette_score(data_frame,
                                           KMeans(n_clusters=i,
@@ -37,6 +31,7 @@ def determine_optimal_k(data_frame, max_clusters):
     optimal_k = np.argmax(silhouette_scores) + 2  # +2 because we start calculating scores at k=2
     return optimal_k
 
+# pylint: disable=too-many-arguments
 def perform_advanced_kmeans(
     file: UploadFile,
     distance_metric: str,

@@ -42,7 +42,6 @@ def transform_to_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.nda
     return clusters_list
 
 
-
 def perform_kmeans_from_file(
     file: UploadFile,
     distance_metric: str,
@@ -52,9 +51,13 @@ def perform_kmeans_from_file(
     selected_columns: Union[None, list[int]] = None,
     user_k: Optional[int] = None
 ) -> BasicKMeansResult:
+    """
+    Perform KMeans clustering on an uploaded file.
+    """
     data_frame, filename = process_uploaded_file(file, selected_columns)
     logger.info("Processed uploaded file. Shape: %s", data_frame.shape)
-    return _perform_kmeans(data_frame, filename, distance_metric, kmeans_type, user_id, request_id, user_k)
+    return _perform_kmeans(data_frame, filename, distance_metric, 
+                           kmeans_type, user_id, request_id, user_k)
 
 
 def perform_kmeans_from_dataframe(
@@ -66,7 +69,11 @@ def perform_kmeans_from_dataframe(
     request_id: int,
     advanced_k: Optional[int] = None
 ) -> BasicKMeansResult:
-    return _perform_kmeans(df, filename, distance_metric, kmeans_type, user_id, request_id, advanced_k)
+    """
+    Perform KMeans clustering on a DataFrame.
+    """
+    return _perform_kmeans(df, filename, distance_metric, 
+                           kmeans_type, user_id, request_id, advanced_k)
 
 
 def _perform_kmeans(
@@ -88,7 +95,8 @@ def _perform_kmeans(
     elif kmeans_type == "OptimizedMiniBatchKMeans":
         model = OptimizedMiniBatchKMeans(k, distance_metric)
     else:
-        raise ValueError("Invalid kmeans_type: {}".format(kmeans_type))
+        raise ValueError(f"Invalid kmeans_type: {kmeans_type}")
+
     logger.info("Initialized %s model.", kmeans_type)
 
     # Fit the model

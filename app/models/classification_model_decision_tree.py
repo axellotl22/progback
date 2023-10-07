@@ -29,6 +29,7 @@ class BestSplitStrategy(Enum):
     GINI = "Gini-Index"
     ENTROPY = "Entropy"
     INFORMATION_GAIN = "Information Gain"
+    NONE = "None"
 
 class LeaveNode(BaseModel):
     """
@@ -43,6 +44,7 @@ class FeatureNode(BaseModel):
     """
     feature_name: str
     feature_id: int
+    feature_id_name: Optional[str]
     left: Union['FeatureNode','LeaveNode', None]
     right: Union['FeatureNode','LeaveNode', None]
     treshold: float
@@ -72,14 +74,26 @@ class DecisionTree(BaseModel):
     - split_strategy: Verfahren, nachdem gesplittet werden soll
    
     """
+    #Tree
     root: FeatureNode
+    #Vorhersage und Genauigkeit
+    labelclassname: Optional[str]
+    self_predictions: Optional[List[str]]
     accuracy: float
+    confusion_matrix: Optional[List[List[int]]]
+    feature_names: Optional[List[str]]
+    #Split Kriterien
     min_samples_split: int
     max_depth: int
+    random_state: Optional[int]
+    test_size: Optional[float]
     features_count: Optional[int]
-    labelclassname: Optional[str]
-    #feature_weights: Optional[ndarray]
     split_strategy: Optional[SplitStrategy]
+    best_split_strategy: Optional[BestSplitStrategy]
+    feature_behaviour: Optional[bool]
+    feature_weights: Optional[List[int]]
+    #Stutzen
+    pruning: Optional[bool]
     
 class DecisionTreeResult(BaseModel):
     """

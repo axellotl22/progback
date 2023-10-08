@@ -11,8 +11,7 @@ import numpy as np
 from fastapi import UploadFile
 from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
 from app.models.basic_kmeans_model import KMeansResult3D, Cluster3D, Centroid3D
-from app.services.utils import process_uploaded_file
-from app.services.basic_kmeans_service import normalize_dataframe
+from app.services.utils import process_uploaded_file, normalize_dataframe, handle_categorical_data
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -60,6 +59,10 @@ def perform_3d_kmeans_from_file(
     Perform 3D KMeans clustering on an uploaded file.
     """
     data_frame, filename = process_uploaded_file(file, selected_columns)
+    
+    # categorical data
+    data_frame=handle_categorical_data(data_frame)
+    
     logger.info("Processed uploaded file. Shape: %s", data_frame.shape)
     return _perform_3d_kmeans(data_frame, filename, distance_metric,
                               kmeans_type, user_id, request_id, user_k)

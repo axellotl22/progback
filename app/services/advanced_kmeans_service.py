@@ -13,7 +13,7 @@ from sklearn.metrics import silhouette_score
 
 from app.models.basic_kmeans_model import BasicKMeansResult
 from app.services.basic_kmeans_service import perform_kmeans_from_dataframe
-from app.services.utils import process_uploaded_file
+from app.services.utils import process_uploaded_file, normalize_dataframe, handle_categorical_data
 
 # pylint: disable=duplicate-code
 def determine_optimal_k(data_frame, max_clusters):
@@ -45,10 +45,14 @@ def perform_advanced_kmeans(
     """    
     # Process the uploaded file
     data_frame, filename = process_uploaded_file(file, selected_columns)
+    
+    data_frame_cat = handle_categorical_data(data_frame)
+    
+    data_frame_norm = normalize_dataframe(data_frame_cat)
 
     # Determine the optimal k
-    max_clusters = min(int(0.25 * data_frame.shape[0]), 10)
-    optimal_k = determine_optimal_k(data_frame, max_clusters)
+    max_clusters = min(int(0.25 * data_frame.shape[0]), 20)
+    optimal_k = determine_optimal_k(data_frame_norm, max_clusters)
     
     #print dataframe shape
     print(data_frame.shape)

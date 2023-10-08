@@ -5,31 +5,12 @@ Service for performing 3D KMeans clustering with automatic k determination using
 """
 
 from typing import Union
-
-import numpy as np
 from fastapi import UploadFile
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
 
 from app.models.basic_kmeans_model import KMeansResult3D
 from app.services.three_d_basic_kmeans_service import perform_3d_kmeans_from_dataframe
-from app.services.utils import process_uploaded_file
-
-# pylint: disable=duplicate-code
-def determine_optimal_k(data_frame, max_clusters):
-    """
-    Determine the optimal number of clusters using silhouette score.
-    """
-    silhouette_scores = [silhouette_score(data_frame,
-                                          KMeans(n_clusters=i,
-                                                 init='k-means++',
-                                                 max_iter=300,
-                                                 n_init=10,
-                                                 random_state=0).fit(data_frame).labels_)
-                         for i in range(2, max_clusters+1)]
-
-    optimal_k = np.argmax(silhouette_scores) + 2  # +2 because we start calculating scores at k=2
-    return optimal_k
+from app.services.utils import process_uploaded_file, normalize_dataframe, handle_categorical_data
+from app.services.advanced_kmeans_service import determine_optimal_k
 
 # pylint: disable=too-many-arguments
 def perform_advanced_3d_kmeans(
@@ -46,9 +27,12 @@ def perform_advanced_3d_kmeans(
     # Process the uploaded file
     data_frame, filename = process_uploaded_file(file, selected_columns)
 
+    data_frame_cat = handle_categorical_data(data_frame)
+    
+    data_frame_norm = normalize_dataframe(data_frame_cat)
     # Determine the optimal k
     max_clusters = min(int(0.25 * data_frame.shape[0]), 20)
-    optimal_k = determine_optimal_k(data_frame, max_clusters)
+    optimal_k = determine_optimal_k(data_frame_norm, max_clusters)
 
     # Use the three_d_basic_kmeans_service with the determined optimal k
     result = perform_3d_kmeans_from_dataframe(

@@ -34,16 +34,6 @@ class Centroid3D(BaseModel):
     z: float
 
 
-class CentroidND(BaseModel):
-    """
-    Model representing a centroid of a cluster in nD.
-
-    Attributes:
-    - coordinates (List[float]): Coordinates of the centroid in nD.
-    """
-    coordinates: List[float]
-
-
 class Cluster(BaseModel):
     """
     Model representing a single cluster in 2D.
@@ -66,20 +56,6 @@ class Cluster3D(Cluster):
     - centroid (Centroid3D): The centroid of the cluster.
     """
     centroid: Centroid3D
-
-
-class ClusterND(BaseModel):
-    """
-    Model representing a single cluster in nD.
-
-    Attributes:
-    - cluster_nr (int): Number representing the cluster.
-    - centroid (CentroidND): The centroid of the cluster in nD.
-    - points (List[Dict[str, float]]): List of points within the cluster.
-    """
-    clusterNr: int
-    centroid: CentroidND
-    points: List[Dict[str, float]]
 
 
 class BasicKMeansResult(BaseModel):
@@ -119,12 +95,30 @@ class KMeansResult3D(BasicKMeansResult):
     cluster: List[Cluster3D]
 
 
-class KMeansResultND(BasicKMeansResult):
+class KMeansResultND(BaseModel):
     """
-    Model representing the result of the KMeans clustering process in nD.
+    Model representing the result of the KMeans clustering process in n dimensions.
 
     Attributes:
-    - labels (List[str]): Labels for all dimensions.
+    - user_id (int): User ID.
+    - request_id (int): Request ID.
+    - clusters (List[Cluster]): List of resulting clusters.
+    - x_label (str): Label for the X-coordinate.
+    - y_label (str): Label for the Y-coordinate.
+    - iterations (int): Number of iterations the algorithm ran.
+    - used_distance_metric (str): The distance metric used for clustering.
+    - filename (str): Name of the file containing the data points.
+    - k_value (int): Number of clusters used.
+    - important_features (Dict[str, float]): Dictionary of: 
+                            important features with their contributions.
     """
-    labels: List[str]
-    cluster: List[ClusterND]
+    user_id: int
+    request_id: int
+    clusters: List[Cluster]
+    x_label: str
+    y_label: str
+    iterations: int
+    used_distance_metric: str
+    name: str
+    k_value: int
+    important_features: Dict[str, float]

@@ -3,6 +3,8 @@ Hauptmodul der App.
 """
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.routers import (all_in_one_clustering, 
                          basic_kmeans_router, 
                          elbow_router,
@@ -20,6 +22,20 @@ from app.entitys.user import UserCreate, UserRead, UserUpdate, auth_backend, fas
 from app.routers import job_router
 
 app = FastAPI()
+
+# ----------------------- Konfiguration User ---------------------------------------------
+origins = [
+    "http://localhost",
+    "https://localhost",
+    "https://clustericke.de/",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ----------------------- 2D kmeans Routers ---------------------------------------------
 app.include_router(basic_kmeans_router.router, prefix="/basic", tags=["2D K-Means"])

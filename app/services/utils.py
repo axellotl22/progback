@@ -181,11 +181,11 @@ def handle_categorical_data(data_frame: pd.DataFrame) -> pd.DataFrame:
     """
     return pd.get_dummies(data_frame, drop_first=True)
 
-def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+def normalize_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
     Normalize the data using StandardScaler.
     """
     scaler = StandardScaler()
-    normalized_data = scaler.fit_transform(df)
-    normalized_df = pd.DataFrame(normalized_data, columns=df.columns)
+    normalized_data = scaler.fit_transform(dataframe)
+    normalized_df = pd.DataFrame(normalized_data, columns=dataframe.columns)
     return normalized_df

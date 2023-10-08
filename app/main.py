@@ -35,7 +35,8 @@ app.include_router(advanced_three_d_kmeans_router.router, prefix="/advanced", ta
 
 # ----------------------- nD kmeans Routers ---------------------------------------------
 app.include_router(basic_n_d_kmeans_router.router, prefix="/basic", tags=["N dimensional K-Means"])
-app.include_router(advanced_n_d_kmeans_router.router, prefix="/advanced", tags=["N dimensional K-Means"])
+app.include_router(advanced_n_d_kmeans_router.router, prefix="/advanced", 
+                   tags=["N dimensional K-Means"])
 
 
 

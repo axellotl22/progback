@@ -42,7 +42,7 @@ class Cluster(BaseModel):
     centroid: Centroid
     points: List[Dict[str, float]]
 
-
+# pylint: disable=R0801
 class ClusterResult(BaseModel):
     """
     Modell für das Ergebnis des Clustering-Prozesses.

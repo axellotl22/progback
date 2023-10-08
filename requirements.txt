@@ -2,7 +2,6 @@ fastapi~=0.103.1
 uvicorn[standard]
 pydantic~=2.3.0
 pandas
-xlrd
 openpyxl
 scikit-learn
 pydantic
@@ -20,3 +19,8 @@ pymysql
 joblib
 aiosqlite
 aiomysql
+numba
+joblib
+psutil
+asyncio
+websockets

@@ -23,16 +23,17 @@ from app.routers import job_router
 
 app = FastAPI()
 
-# ----------------------- Konfiguration User ---------------------------------------------
+# ----------------------- Konfiguration CORS ---------------------------------------------
 origins = [
     "http://localhost",
     "https://localhost",
-    "https://clustericke.de/",
+    "https://clustericke.de",
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

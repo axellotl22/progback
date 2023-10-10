@@ -1,7 +1,7 @@
 """
 Datenbank-Komponente für Jobs
 """
-from sqlalchemy import Column, String, Integer, DateTime, Enum, Text
+from sqlalchemy import Column, String, Integer, DateTime, Enum, JSON
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -18,12 +18,12 @@ class DBJob(Base):
     __tablename__ = "jobs"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(String(255), nullable=False)
     created_at = Column(DateTime, nullable=False)
     job_name = Column(String(255), nullable=True)
     status = Column(Enum(JobStatus), nullable=False)
     job_parameters = Column(String(5000), nullable=False)
-    json_values = Column(Text, nullable=True)
+    json_values = Column(JSON, nullable=True)
 
 
 engine = get_async_engine()

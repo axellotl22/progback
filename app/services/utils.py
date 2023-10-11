@@ -5,10 +5,13 @@ This module provides functions for loading, cleaning and processing dataframes.
 import logging
 import os
 from typing import List, Union
+import numpy as np
 
 from fastapi import HTTPException, UploadFile
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+
+from app.models.basic_kmeans_model import Cluster, Centroid, Cluster3D, Centroid3D
 
 # Constants in uppercase
 CSV = '.csv'
@@ -189,3 +192,53 @@ def normalize_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
     normalized_data = scaler.fit_transform(dataframe)
     normalized_df = pd.DataFrame(normalized_data, columns=dataframe.columns)
     return normalized_df
+
+def transform_to_2d_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.ndarray) -> list:
+    """
+    Transform the data into the Cluster model structure.
+    """
+    clusters_list = []
+
+    for cluster_id in range(cluster_centers.shape[0]):
+        cluster_data = data_frame[data_frame["cluster"] == cluster_id].drop(columns=["cluster"])
+        
+        # Transform points to always have "x" and "y" as keys
+        cluster_points = [{"x": row[0], "y": row[1]} for _, row in cluster_data.iterrows()]
+        
+        clusters_list.append(
+            Cluster(
+                clusterNr=cluster_id,
+                centroid=Centroid(
+                    x=cluster_centers[cluster_id][0], y=cluster_centers[cluster_id][1]),
+                points=cluster_points
+            )
+        )
+
+    return clusters_list
+
+def transform_to_3d_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.ndarray) -> list:
+    """
+    Transform the data into the 3D Cluster model structure.
+    """
+    clusters_list = []
+
+    for cluster_id in range(cluster_centers.shape[0]):
+        cluster_data = data_frame[data_frame["cluster"] == cluster_id].drop(columns=[
+                                                                            "cluster"])
+
+        # Transform points to always have "x", "y", and "z" as keys
+        cluster_points = [{"x": row[0], "y": row[1], "z": row[2]}
+                          for _, row in cluster_data.iterrows()]
+
+        clusters_list.append(
+            Cluster3D(
+                clusterNr=cluster_id,
+                centroid=Centroid3D(
+                    x=cluster_centers[cluster_id][0],
+                    y=cluster_centers[cluster_id][1],
+                    z=cluster_centers[cluster_id][2]),
+                points=cluster_points
+            )
+        )
+
+    return clusters_list

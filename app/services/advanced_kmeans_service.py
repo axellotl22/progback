@@ -38,7 +38,8 @@ def perform_advanced_kmeans(
     kmeans_type: str,
     user_id: int,
     request_id: int,
-    selected_columns: Union[None, list[int]] = None
+    selected_columns: Union[None, list[int]] = None,
+    normalize: bool = True
 ) -> BasicKMeansResult:
     """
     Perform KMeans clustering on an uploaded file with automatic k determination.
@@ -48,11 +49,14 @@ def perform_advanced_kmeans(
     
     data_frame_cat = handle_categorical_data(data_frame)
     
-    data_frame_norm = normalize_dataframe(data_frame_cat)
+    if normalize:
+        data_frame_new = normalize_dataframe(data_frame_cat)
+    else:
+        data_frame_new = data_frame_cat
 
     # Determine the optimal k
     max_clusters = min(int(0.25 * data_frame.shape[0]), 20)
-    optimal_k = determine_optimal_k(data_frame_norm, max_clusters)
+    optimal_k = determine_optimal_k(data_frame_new, max_clusters)
     
     #print dataframe shape
     print(data_frame.shape)
@@ -65,6 +69,7 @@ def perform_advanced_kmeans(
         user_id=user_id,
         request_id=request_id,
         advanced_k=optimal_k,
-        filename=filename
+        filename=filename,
+        normalize=normalize
     )
     return result

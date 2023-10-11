@@ -27,7 +27,8 @@ def perform_kmeans_from_file(
     user_id: int,
     request_id: int,
     selected_columns: Union[None, list[int]] = None,
-    user_k: Optional[int] = None
+    user_k: Optional[int] = None,
+    normalize: bool = True
 ) -> BasicKMeansResult:
     """
     Perform KMeans clustering on an uploaded file.
@@ -35,7 +36,7 @@ def perform_kmeans_from_file(
     data_frame, filename = process_uploaded_file(file, selected_columns)
     logger.info("Processed uploaded file. Shape: %s", data_frame.shape)
     return _perform_kmeans(data_frame, filename, distance_metric, 
-                           kmeans_type, user_id, request_id, user_k)
+                           kmeans_type, user_id, request_id, user_k, normalize)
 
 
 def perform_kmeans_from_dataframe(
@@ -45,13 +46,14 @@ def perform_kmeans_from_dataframe(
     kmeans_type: str,
     user_id: int,
     request_id: int,
-    advanced_k: Optional[int] = None
+    advanced_k: Optional[int] = None,
+    normalize: bool = True
 ) -> BasicKMeansResult:
     """
     Perform KMeans clustering on a DataFrame.
     """
     return _perform_kmeans(data_frame, filename, distance_metric, 
-                           kmeans_type, user_id, request_id, advanced_k)
+                           kmeans_type, user_id, request_id, advanced_k, normalize)
 
 # pylint: disable=R0801
 def _perform_kmeans(
@@ -61,11 +63,15 @@ def _perform_kmeans(
     kmeans_type: str,
     user_id: int,
     request_id: int,
-    k: int
+    k: int,
+    normalize: bool = True
 ) -> BasicKMeansResult:
-    data_frame=handle_categorical_data(data_frame)
+    data_frame_cat=handle_categorical_data(data_frame)
     
-    data_frame = normalize_dataframe(data_frame)
+    if normalize:
+        data_frame = normalize_dataframe(data_frame_cat)
+    else: 
+        data_frame = data_frame_cat
     
     data_np = data_frame.values
     

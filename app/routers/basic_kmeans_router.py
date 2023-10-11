@@ -27,7 +27,8 @@ async def kmeans(
                              description="OptimizedKMeans/OptimizedMiniBatchKMeans"),
     k_clusters: int = Query(2, alias="kCluster", description="Number of clusters"),
     user_id: int = Query(0, description="User ID"),
-    request_id: int = Query(0, description="Request ID")
+    request_id: int = Query(0, description="Request ID"),
+    normalize: bool = True
 ):
     """
     Endpoint for KMeans clustering.
@@ -53,7 +54,8 @@ async def kmeans(
             kmeans_type=kmeans_type,
             user_id=user_id,
             request_id=request_id,
-            selected_columns=[column1, column2]
+            selected_columns=[column1, column2],
+            normalize=normalize
         )
         # Return the KMeansResult object.
         return kmeans_result

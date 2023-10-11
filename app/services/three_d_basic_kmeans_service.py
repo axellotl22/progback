@@ -7,42 +7,14 @@ Service for performing 3D KMeans clustering using optimized KMeans and MiniBatch
 import logging
 from typing import Optional, Union
 import pandas as pd
-import numpy as np
 from fastapi import UploadFile
 from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
-from app.models.basic_kmeans_model import KMeansResult3D, Cluster3D, Centroid3D
-from app.services.utils import process_uploaded_file, normalize_dataframe, handle_categorical_data
+from app.models.basic_kmeans_model import KMeansResult3D
+from app.services.utils import (process_uploaded_file, normalize_dataframe, 
+                                handle_categorical_data, transform_to_3d_cluster_model)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-
-def transform_to_3d_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.ndarray) -> list:
-    """
-    Transform the data into the 3D Cluster model structure.
-    """
-    clusters_list = []
-
-    for cluster_id in range(cluster_centers.shape[0]):
-        cluster_data = data_frame[data_frame["cluster"] == cluster_id].drop(columns=[
-                                                                            "cluster"])
-
-        # Transform points to always have "x", "y", and "z" as keys
-        cluster_points = [{"x": row[0], "y": row[1], "z": row[2]}
-                          for _, row in cluster_data.iterrows()]
-
-        clusters_list.append(
-            Cluster3D(
-                clusterNr=cluster_id,
-                centroid=Centroid3D(
-                    x=cluster_centers[cluster_id][0],
-                    y=cluster_centers[cluster_id][1],
-                    z=cluster_centers[cluster_id][2]),
-                points=cluster_points
-            )
-        )
-
-    return clusters_list
 
 
 # pylint: disable=too-many-arguments

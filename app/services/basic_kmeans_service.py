@@ -10,39 +10,15 @@ Service for performing KMeans clustering using optimized KMeans and MiniBatch KM
 import logging
 from typing import Optional, Union
 import pandas as pd
-import numpy as np
 from fastapi import UploadFile
 
 from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
-from app.models.basic_kmeans_model import BasicKMeansResult, Cluster, Centroid
-from app.services.utils import process_uploaded_file,normalize_dataframe, handle_categorical_data
+from app.models.basic_kmeans_model import BasicKMeansResult
+from app.services.utils import (process_uploaded_file,normalize_dataframe, 
+                                handle_categorical_data, transform_to_2d_cluster_model)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-def transform_to_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.ndarray) -> list:
-    """
-    Transform the data into the Cluster model structure.
-    """
-    clusters_list = []
-
-    for cluster_id in range(cluster_centers.shape[0]):
-        cluster_data = data_frame[data_frame["cluster"] == cluster_id].drop(columns=["cluster"])
-        
-        # Transform points to always have "x" and "y" as keys
-        cluster_points = [{"x": row[0], "y": row[1]} for _, row in cluster_data.iterrows()]
-        
-        clusters_list.append(
-            Cluster(
-                clusterNr=cluster_id,
-                centroid=Centroid(
-                    x=cluster_centers[cluster_id][0], y=cluster_centers[cluster_id][1]),
-                points=cluster_points
-            )
-        )
-
-    return clusters_list
-
 
 def perform_kmeans_from_file(
     file: UploadFile,
@@ -116,7 +92,7 @@ def _perform_kmeans(
     logger.info("Assigned labels to data.")
 
     # Transform the results to the Cluster model structure
-    clusters = transform_to_cluster_model(data_frame, model.cluster_centers_)
+    clusters = transform_to_2d_cluster_model(data_frame, model.cluster_centers_)
     logger.info("Transformed data to Cluster models.")
 
     x_label = data_frame.columns[0]

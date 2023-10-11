@@ -25,7 +25,8 @@ def perform_3d_kmeans_from_file(
     user_id: int,
     request_id: int,
     selected_columns: Union[None, list[int]] = None,
-    user_k: Optional[int] = None
+    user_k: Optional[int] = None,
+    normalize: bool = True
 ) -> KMeansResult3D:
     """
     Perform 3D KMeans clustering on an uploaded file.
@@ -37,7 +38,7 @@ def perform_3d_kmeans_from_file(
     
     logger.info("Processed uploaded file. Shape: %s", data_frame.shape)
     return _perform_3d_kmeans(data_frame, filename, distance_metric,
-                              kmeans_type, user_id, request_id, user_k)
+                              kmeans_type, user_id, request_id, user_k, normalize)
 
 # pylint: disable=too-many-arguments
 
@@ -49,13 +50,16 @@ def perform_3d_kmeans_from_dataframe(
     kmeans_type: str,
     user_id: int,
     request_id: int,
-    advanced_k: Optional[int] = None
+    advanced_k: Optional[int] = None,
+    normalize: bool = True
 ) -> KMeansResult3D:
     """
     Perform 3D KMeans clustering on a DataFrame.
     """
+    data_frame = handle_categorical_data(data_frame)
+
     return _perform_3d_kmeans(data_frame, filename, distance_metric,
-                              kmeans_type, user_id, request_id, advanced_k)
+                              kmeans_type, user_id, request_id, advanced_k, normalize)
 
 # pylint: disable=R0801
 # pylint: disable=too-many-arguments
@@ -66,10 +70,14 @@ def _perform_3d_kmeans(
     kmeans_type: str,
     user_id: int,
     request_id: int,
-    k: int
+    k: int,
+    normalize: bool = True
 ) -> KMeansResult3D:
     # Convert DataFrame to numpy array for clustering
-    data_frame = normalize_dataframe(data_frame)
+    if normalize:
+        data_frame = normalize_dataframe(data_frame)
+    
+    data_np = data_frame.values
     data_np = data_frame.values
     logger.info("Converted data to numpy array. Shape: %s", data_np.shape)
 

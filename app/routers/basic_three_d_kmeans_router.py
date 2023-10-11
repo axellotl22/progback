@@ -27,7 +27,8 @@ async def kmeans_3d(
                              description="OptimizedKMeans/OptimizedMiniBatchKMeans"),
     k_clusters: int = Query(2, description="Number of clusters"),
     user_id: int = Query(0, description="User ID"),
-    request_id: int = Query(0, description="Request ID")
+    request_id: int = Query(0, description="Request ID"),
+    normalize: bool = Query(True, description="Normalize the data before clustering")
 ):
     """
     Endpoint for 3D KMeans clustering.
@@ -54,7 +55,8 @@ async def kmeans_3d(
             kmeans_type=kmeans_type,
             user_id=user_id,
             request_id=request_id,
-            selected_columns=[column1, column2, column3]
+            selected_columns=[column1, column2, column3],
+            normalize=normalize
         )
         # Return the KMeansResult3D object.
         return kmeans_result_3d

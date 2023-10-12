@@ -16,14 +16,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def create_job(database: Session, user_id: int, job_parameters: str, json_input: str):
+def create_job(database: Session, user_id: int, job_parameters: str, json_input: str, name: str):
     """
     Erstellt einen Job in der Datenbank
     """
 
     db_job = DBJob(user_id=user_id, created_at=datetime.now(),
                    status=JobStatus.WAITING, json_values=json_input,
-                   job_parameters=job_parameters)
+                   job_parameters=job_parameters, job_name=name)
     database.add(db_job)
     database.commit()
     database.refresh(db_job)
@@ -38,11 +38,18 @@ def set_job_result(database: Session, job_id: int, result: str):
     database.commit()
 
 
-def list_jobs(database: Session, skip: int = 0, limit: int = 100):
+def list_jobs(database: Session, filter_user_id: str):
     """
     Gibt eine Liste von allen Jobs der Datenbank zurück
     """
-    return database.query(DBJob).offset(skip).limit(limit).all()
+    return database.query(DBJob).filter(DBJob.user_id == filter_user_id).all()
+
+def list_jobs_name(database: Session, filter_user_id: str, name: str):
+    """
+    Gibt eine Liste von allen Jobs mit dem Namen der Datenbank zurück
+    """
+    return database.query(DBJob).filter(DBJob.user_id == filter_user_id
+                                        and DBJob.job_name == name).all()
 
 
 def get_job_by_id(database: Session, job_id: int):
@@ -52,11 +59,12 @@ def get_job_by_id(database: Session, job_id: int):
     return database.query(DBJob).get(job_id)
 
 
-def get_job_by_name(database: Session, job_name: str):
+def get_job_by_name(database: Session, job_name: str, filter_user_id: str):
     """
     Gibt einen Job mit einer bestimmten ID zurück
     """
-    return database.query(DBJob).where(DBJob.job_name.is_(job_name)).first()
+    return (database.query(DBJob).filter(DBJob.user_id == filter_user_id)
+            .where(DBJob.job_name == job_name).all())
 
 
 class RunJob:
@@ -82,8 +90,6 @@ class RunJob:
         logger.info("Running \"%s\"", self._func.__name__)
         loop = asyncio.get_event_loop()
         fut = loop.create_future()
-
-        print(self._func.__name__ + f"({self._args})")
 
         def _on_done(obj):
             """

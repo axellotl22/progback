@@ -23,7 +23,7 @@ class JobResponse(BaseModel):
     Modell für Rückgabe aus Job-Endpunkt
     """
     job_id: int
-    user_id: int
+    user_id: str
     job_name: str
     created_at: str
     status: JobStatus
@@ -35,6 +35,7 @@ class JobResponseFull(JobResponse):
     erweitertes Modell für Rückgabe aus Job-Endpunkt
     """
     json_values: str
+
 
 # pylint: disable=too-few-public-methods
 class UserJob:
@@ -53,8 +54,6 @@ class UserJob:
     def __init__(self, jobtype, parameters):
         """
         Konstruktur
-        :param jobtype:
-        :param parameters:
         """
         self.jobtype = jobtype
         self.parameters = parameters
@@ -62,7 +61,6 @@ class UserJob:
     def to_json(self):
         """
         Klasse als JSON
-        :return:
         """
         return dumps(self, default=lambda o: o.__dict__,
                      sort_keys=False, indent=None)

@@ -22,7 +22,8 @@ async def kmeans_nd(
                              description="OptimizedKMeans/OptimizedMiniBatchKMeans"),
     k_clusters: int = Query(2, description="Number of clusters"),
     user_id: int = Query(0, description="User ID"),
-    request_id: int = Query(0, description="Request ID")
+    request_id: int = Query(0, description="Request ID"),
+    use_3d_model:bool=False
 ):
     """
     Endpoint for N-D KMeans clustering with dimensionality reduction to 2D.
@@ -45,7 +46,8 @@ async def kmeans_nd(
             distance_metric=distance_metric,
             kmeans_type=kmeans_type,
             user_id=user_id,
-            request_id=request_id
+            request_id=request_id,
+            use_3d_model=use_3d_model
         )
         # Return the KMeansResultND object.
         return kmeans_result_nd

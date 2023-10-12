@@ -69,7 +69,7 @@ class BaseOptimizedKMeans:
     supported_distance_metrics = {
         "EUCLIDEAN": euclidean_distance_matrix,
         "MANHATTAN": manhattan_distance_matrix,
-         "JACCARDS": jaccard_distance_matrix
+        "JACCARDS": jaccard_distance_matrix
     }
 
     def __init__(self, number_clusters, distance_metric="EUCLIDEAN",
@@ -181,13 +181,13 @@ class OptimizedMiniBatchKMeans(BaseOptimizedKMeans):
     Optimized Mini-Batch K-Means clustering with specified distance metric.
     """
     # pylint: disable=too-many-arguments
+
     def __init__(self, number_clusters, distance_metric="EUCLIDEAN",
                  batch_size=100, max_iterations=300, tolerance=1e-4):
         super().__init__(number_clusters, distance_metric, max_iterations, tolerance)
         self.batch_size = batch_size
 
     def fit(self, data_points):
-
         kmeans = KMeans(n_clusters=self.number_clusters,
                         init='k-means++', max_iter=1, n_init=1)
         kmeans.fit(data_points)
@@ -198,14 +198,21 @@ class OptimizedMiniBatchKMeans(BaseOptimizedKMeans):
                 data_points.shape[0], self.batch_size, replace=False)
             mini_batch = data_points[indices]
 
-            distances = np.array([[self.distance(point, center)
-                                   for center in self.cluster_centers_] for point in mini_batch])
+            distances = self.distance(mini_batch, self.cluster_centers_)
             labels = np.argmin(distances, axis=1)
 
-            new_centers = np.array([mini_batch[labels == i].mean(axis=0)
-                                    for i in range(self.number_clusters)])
-            if np.all(np.abs(new_centers - self.cluster_centers_) < self.tolerance):
+            for i in range(self.number_clusters):
+                points_in_cluster = mini_batch[labels == i]
+                if len(points_in_cluster) > 0:
+                    # Use a simple moving average for updating
+                    self.cluster_centers_[i] = (0.9 * self.cluster_centers_[i]
+                                                + 0.1 * points_in_cluster.mean(axis=0))
+
+            # Check for convergence
+            if np.all(np.abs(self.distance(self.cluster_centers_, 
+                                           self.cluster_centers_.copy()) < self.tolerance)):
+                logger.info(
+                    "Convergence reached after %d iterations.", _)
                 break
 
-            self.cluster_centers_ = new_centers
             self.iterations_ += 1

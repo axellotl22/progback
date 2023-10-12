@@ -22,7 +22,8 @@ async def advanced_kmeans_nd(
     kmeans_type: str = Query("OptimizedKMeans",
                              description="OptimizedKMeans/OptimizedMiniBatchKMeans"),
     user_id: int = Query(0, description="User ID"),
-    request_id: int = Query(0, description="Request ID")
+    request_id: int = Query(0, description="Request ID"),
+    use_3d_model:bool = False
 ):
     """
     Endpoint for advanced N-D KMeans clustering 
@@ -44,7 +45,8 @@ async def advanced_kmeans_nd(
             distance_metric=distance_metric,
             kmeans_type=kmeans_type,
             user_id=user_id,
-            request_id=request_id
+            request_id=request_id,
+            use_3d_model=use_3d_model
         )
         # Return the KMeansResultND object.
         return advanced_kmeans_result_nd

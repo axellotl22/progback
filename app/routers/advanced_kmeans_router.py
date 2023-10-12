@@ -25,7 +25,8 @@ async def advanced_kmeans(
     kmeans_type: str = Query("OptimizedKMeans",
                              description="OptimizedKMeans/OptimizedMiniBatchKMeans"),
     user_id: int = Query(0, description="User ID"),
-    request_id: int = Query(0, description="Request ID")
+    request_id: int = Query(0, description="Request ID"),
+    normalize: bool = True
 ):
     """
     Endpoint for KMeans clustering with automatic k determination.
@@ -49,7 +50,8 @@ async def advanced_kmeans(
             kmeans_type,
             user_id,
             request_id,
-            selected_columns=[column1, column2]
+            selected_columns=[column1, column2],
+            normalize= normalize
         )
         # Return the KMeansResult object.
         return kmeans_result

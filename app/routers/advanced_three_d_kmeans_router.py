@@ -16,11 +16,11 @@ router = APIRouter()
 # pylint: disable=duplicate-code
 async def advanced_kmeans_3d(
     file: UploadFile = File(...),
-    column1: int = Query(0, alias="Column 1",
+    column1: int = Query(0,
                           description="Index of the first column"),
-    column2: int = Query(1, alias="Column 2",
+    column2: int = Query(1,
                           description="Index of the second column"),
-    column3: int = Query(2, alias="Column 3",
+    column3: int = Query(2,
                           description="Index of the third column"),
     distance_metric: str = Query(
             "EUCLIDEAN",
@@ -28,7 +28,8 @@ async def advanced_kmeans_3d(
     kmeans_type: str = Query("OptimizedKMeans",
                              description="OptimizedKMeans/OptimizedMiniBatchKMeans"),
     user_id: int = Query(0, description="User ID"),
-    request_id: int = Query(0, description="Request ID")
+    request_id: int = Query(0, description="Request ID"),
+    normalize: bool = True
 ):
     """
     Endpoint for advanced 3D KMeans clustering with automatic k determination.
@@ -53,7 +54,8 @@ async def advanced_kmeans_3d(
             kmeans_type=kmeans_type,
             user_id=user_id,
             request_id=request_id,
-            selected_columns=[column1, column2, column3]
+            selected_columns=[column1, column2, column3],
+            normalize=normalize
         )
         # Return the KMeansResult3D object.
         return kmeans_result_3d

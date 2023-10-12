@@ -23,6 +23,7 @@ JSON = '.json'
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
 def load_dataframe(file_path: str) -> pd.DataFrame:
     """Loads file into a Pandas DataFrame.
 
@@ -48,6 +49,7 @@ def load_dataframe(file_path: str) -> pd.DataFrame:
     raise ValueError(
         f"Unsupported file type: {os.path.splitext(file_path)[1]}")
 
+
 def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
     """Removes empty and incomplete rows.
 
@@ -65,6 +67,7 @@ def clean_dataframe(data_frame: pd.DataFrame) -> pd.DataFrame:
 
     # Drop empty rows
     return data_frame.dropna()
+
 
 def select_columns(data_frame: pd.DataFrame, columns: List[int]) -> pd.DataFrame:
     """Selects columns by their indices.
@@ -88,6 +91,7 @@ def select_columns(data_frame: pd.DataFrame, columns: List[int]) -> pd.DataFrame
     selected_cols = [data_frame.columns[idx] for idx in columns]
     return data_frame[selected_cols]
 
+
 def extract_selected_columns(data_frame: pd.DataFrame,
                              selected_columns: Union[None, list[int]] = None) -> pd.DataFrame:
     """
@@ -97,6 +101,7 @@ def extract_selected_columns(data_frame: pd.DataFrame,
         columns_to_select = [data_frame.columns[i] for i in selected_columns]
         return data_frame[columns_to_select]
     return data_frame
+
 
 def delete_file(file_path: str):
     """Deletes specified file.
@@ -122,6 +127,7 @@ def delete_file(file_path: str):
         # Handle other errors
         logger.error("Error deleting %s: %s", file_path, err)
 
+
 def save_temp_file(file, directory):
     """Saves a temporary file and returns the path."""
 
@@ -138,6 +144,7 @@ def save_temp_file(file, directory):
 
     return file_path
 
+
 def handle_errors(error):
     """
     Error handling function.
@@ -148,7 +155,8 @@ def handle_errors(error):
     logging.error("Error processing file: %s", error)
     raise HTTPException(500, "Error processing file") from error
 
-def process_uploaded_file(file: UploadFile, 
+
+def process_uploaded_file(file: UploadFile,
                           selected_columns: Union[None, list[int]] = None) -> (pd.DataFrame, str):
     """
     Load, save, clean, and optionally select specific columns from the uploaded file. 
@@ -164,7 +172,7 @@ def process_uploaded_file(file: UploadFile,
     temp_file_path = save_temp_file(file, "temp/")
     data_frame = load_dataframe(temp_file_path)
     data_frame = clean_dataframe(data_frame)
-    
+
     # Select specific columns if provided
     if selected_columns:
         data_frame = extract_selected_columns(data_frame, selected_columns)
@@ -172,11 +180,13 @@ def process_uploaded_file(file: UploadFile,
     delete_file(temp_file_path)
     return data_frame, file.filename
 
+
 def handle_categorical_data(data_frame: pd.DataFrame) -> pd.DataFrame:
     """
     Convert categorical and boolean columns to numerical format using one-hot encoding.
     """
     return pd.get_dummies(data_frame, drop_first=True)
+
 
 def normalize_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
@@ -187,6 +197,7 @@ def normalize_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
     normalized_df = pd.DataFrame(normalized_data, columns=dataframe.columns)
     return normalized_df
 
+
 def transform_to_2d_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.ndarray) -> list:
     """
     Transform the data into the Cluster model structure.
@@ -194,11 +205,13 @@ def transform_to_2d_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.
     clusters_list = []
 
     for cluster_id in range(cluster_centers.shape[0]):
-        cluster_data = data_frame[data_frame["cluster"] == cluster_id].drop(columns=["cluster"])
-        
+        cluster_data = data_frame[data_frame["cluster"] == cluster_id].drop(columns=[
+                                                                            "cluster"])
+
         # Transform points to always have "x" and "y" as keys
-        cluster_points = [{"x": row.iloc[0], "y": row.iloc[1]} for _, row in cluster_data.iterrows()]
-        
+        cluster_points = [{"x": row.iloc[0], "y": row.iloc[1]}
+                          for _, row in cluster_data.iterrows()]
+
         clusters_list.append(
             Cluster(
                 clusterNr=cluster_id,
@@ -209,6 +222,7 @@ def transform_to_2d_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.
         )
 
     return clusters_list
+
 
 def transform_to_3d_cluster_model(data_frame: pd.DataFrame, cluster_centers: np.ndarray) -> list:
     """

@@ -12,8 +12,11 @@ from fastapi import UploadFile
 from sklearn.manifold import TSNE
 from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
 from app.models.basic_kmeans_model import BasicKMeansResult, KMeansResult3D
-from app.services.utils import (process_uploaded_file, normalize_dataframe,
-                                handle_categorical_data, transform_to_2d_cluster_model, transform_to_3d_cluster_model)
+from app.services.utils import (process_uploaded_file, 
+                                normalize_dataframe,
+                                handle_categorical_data, 
+                                transform_to_2d_cluster_model, 
+                                transform_to_3d_cluster_model)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -32,7 +35,8 @@ def perform_nd_kmeans_from_file(
         use_3d_model: bool = False
 ) -> Union[BasicKMeansResult, KMeansResult3D]:
     """
-    Perform N-Dimensional KMeans clustering on an uploaded file and reduce dimensionality using t-SNE.
+    Perform N-Dimensional KMeans clustering on an uploaded 
+    file and reduce dimensionality using t-SNE.
     """
     data_frame, filename = process_uploaded_file(file, selected_columns)
     data_frame = handle_categorical_data(data_frame)
@@ -76,11 +80,13 @@ def _perform_nd_kmeans(
     components = 3 if use_3d_model else 2
     tsne = TSNE(n_components=components)
     data_transformed = tsne.fit_transform(data_np)
-    
+
     if use_3d_model:
-        data_frame = pd.DataFrame(data_transformed, columns=['t-SNE1', 't-SNE2', 't-SNE3'])
+        data_frame = pd.DataFrame(data_transformed, columns=[
+                                  't-SNE1', 't-SNE2', 't-SNE3'])
     else:
-        data_frame = pd.DataFrame(data_transformed, columns=['t-SNE1', 't-SNE2'])
+        data_frame = pd.DataFrame(
+            data_transformed, columns=['t-SNE1', 't-SNE2'])
 
     if kmeans_type == "OptimizedKMeans":
         model = OptimizedKMeans(k, distance_metric)
@@ -95,7 +101,8 @@ def _perform_nd_kmeans(
     data_frame['cluster'] = model.assign_labels(data_transformed)
 
     if use_3d_model:
-        clusters = transform_to_3d_cluster_model(data_frame, model.cluster_centers_)
+        clusters = transform_to_3d_cluster_model(
+            data_frame, model.cluster_centers_)
         return KMeansResult3D(
             user_id=user_id,
             request_id=request_id,
@@ -108,8 +115,9 @@ def _perform_nd_kmeans(
             name=filename,
             k_value=k
         )
-    
-    clusters = transform_to_2d_cluster_model(data_frame, model.cluster_centers_)
+
+    clusters = transform_to_2d_cluster_model(
+        data_frame, model.cluster_centers_)
     return BasicKMeansResult(
         user_id=user_id,
         request_id=request_id,

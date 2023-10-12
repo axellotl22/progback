@@ -1,10 +1,12 @@
 """Tests for the app."""
-
+import asyncio
 import os
 import shutil
 
 from fastapi.testclient import TestClient
+
 from app.main import app
+from app.database import user_db, job_db
 
 # Set environment variable for test mode
 os.environ["TEST_MODE"] = "True"
@@ -76,3 +78,31 @@ class TestApp:
 
         # Print last response
         print(response_1.json())
+
+    def test_register_and_jobs(self):
+
+        asyncio.run(user_db.create_db_and_tables())
+
+        # Register
+        reg_json = {
+            "email": "test@test.com",
+            "password": "test",
+            "is_active": True,
+            "is_superuser": True,
+            "is_verified": True,
+            "username": "string"
+        }
+        client.post("/register/", data=reg_json)
+
+        # Login
+        login_json = {
+            "grant_type": "",
+            "username": "test@test.com",
+            "password": "test",
+            "scope": "",
+            "client_id": "",
+            "client_secret": ""
+        }
+        response = client.post("/login/", data=login_json)
+
+        raise Exception(response.json())

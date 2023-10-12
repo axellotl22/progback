@@ -69,7 +69,7 @@ class BaseOptimizedKMeans:
     supported_distance_metrics = {
         "EUCLIDEAN": euclidean_distance_matrix,
         "MANHATTAN": manhattan_distance_matrix,
-         "JACCARDS": jaccard_distance_matrix
+        "JACCARDS": jaccard_distance_matrix
     }
 
     def __init__(self, number_clusters, distance_metric="EUCLIDEAN",
@@ -181,6 +181,7 @@ class OptimizedMiniBatchKMeans(BaseOptimizedKMeans):
     Optimized Mini-Batch K-Means clustering with specified distance metric.
     """
     # pylint: disable=too-many-arguments
+
     def __init__(self, number_clusters, distance_metric="EUCLIDEAN",
                  batch_size=100, max_iterations=300, tolerance=1e-4):
         super().__init__(number_clusters, distance_metric, max_iterations, tolerance)
@@ -205,10 +206,11 @@ class OptimizedMiniBatchKMeans(BaseOptimizedKMeans):
                 if len(points_in_cluster) > 0:
                     # Use a simple moving average for updating
                     self.cluster_centers_[i] = (0.9 * self.cluster_centers_[i]
-                                               + 0.1 * points_in_cluster.mean(axis=0))
+                                                + 0.1 * points_in_cluster.mean(axis=0))
 
             # Check for convergence
-            if np.all(np.abs(self.distance(self.cluster_centers_, self.cluster_centers_.copy()) < self.tolerance)):
+            if np.all(np.abs(self.distance(self.cluster_centers_, 
+                                           self.cluster_centers_.copy()) < self.tolerance)):
                 logger.info(
                     "Convergence reached after %d iterations.", _)
                 break

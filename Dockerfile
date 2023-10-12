@@ -31,6 +31,7 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 # Kopieren des App-Code in den Container
 COPY ./app /code/app
+COPY ./test /code/test
 
 # Starten Sie die API
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

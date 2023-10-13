@@ -1,26 +1,34 @@
 """Tests for the app."""
+import random
 import asyncio
 import os
 import shutil
+import pytest
 
 from fastapi.testclient import TestClient
 
 from app.main import app
 from app.database import user_db, job_db
 
-# Set environment variable for test mode
+# Set environment variables for test mode
 os.environ["TEST_MODE"] = "True"
 os.environ["DEV_MODE"] = "False"
 
 client = TestClient(app)
 
-ENDPOINT_URL = "/clustering/perform-kmeans-clustering/"
 BASE_TEST_DIR = "test/"
 TEMP_FILES_DIR = "temp_files/"
 
 BASIC_TEST_FILE = os.path.join(BASE_TEST_DIR, "kmeans_basic_test.csv")
 ADVANCED_TEST_FILE = os.path.join(BASE_TEST_DIR, "kmeans_advanced_test.csv")
 
+ENDPOINTS = {
+    "2d": ["/basic/perform-2d-kmeans/", "/advanced/perform-advanced-2d-kmeans/"],
+    "3d": ["/basic/perform-3d-kmeans/", "/advanced/perform-advanced-3d-kmeans/"],
+    "nd": ["/basic/perform-nd-kmeans/", "/advanced/perform-advanced-nd-kmeans/"],
+}
+
+ELBOW_ENDPOINT = "/determination/elbow"
 
 class TestApp:
     """Test class for the application."""
@@ -28,11 +36,8 @@ class TestApp:
     @classmethod
     def setup_class(cls):
         """Check if test files are present."""
-
-        assert os.path.exists(
-            BASIC_TEST_FILE), f"File {BASIC_TEST_FILE} not found."
-        assert os.path.exists(
-            ADVANCED_TEST_FILE), f"File {ADVANCED_TEST_FILE} not found."
+        assert os.path.exists(BASIC_TEST_FILE), f"File {BASIC_TEST_FILE} not found."
+        assert os.path.exists(ADVANCED_TEST_FILE), f"File {ADVANCED_TEST_FILE} not found."
 
         # Create temp directory if it doesn't exist
         if not os.path.exists(TEMP_FILES_DIR):
@@ -45,42 +50,53 @@ class TestApp:
     @classmethod
     def teardown_class(cls):
         """Remove temporary files after tests complete."""
-
         os.remove("test/test.db")
         shutil.rmtree(TEMP_FILES_DIR, ignore_errors=True)
 
     def test_basic(self):
-        """Test endpoint with all default parameters."""
+        """Test basic endpoints."""
+        for cluster_type, (basic_endpoint, _) in ENDPOINTS.items():
+            with open(BASIC_TEST_FILE, "rb") as file:
+                data = {
+                    "k_clusters": random.choice([3, 4, 5, 6, 7]),
+                }
 
-        # Load test data
-        with open(BASIC_TEST_FILE, "rb") as file:
-            # Make request
-            response = client.post(ENDPOINT_URL, files={"file": file})
+                if cluster_type == "3d":
+                    data.update({"column3": 6})
 
-            # Validate response
-            assert response.status_code == 200
-            assert "name" in response.json()
-            assert "cluster" in response.json()
+                response = client.post(basic_endpoint, files={"file": file}, data=data)
+
+                assert response.status_code == 200, f"Expected 200 status for {basic_endpoint}, got {response.status_code}"
+                assert "name" in response.json(), f"Expected 'name' key in response for {basic_endpoint}"
+                assert "cluster" in response.json(), f"Expected 'cluster' key in response for {basic_endpoint}"
 
     def test_advanced(self):
-        """Test endpoint with different combinations of parameters."""
+        """Test advanced endpoints."""
+        for cluster_type, (_, advanced_endpoint) in ENDPOINTS.items():
+            with open(ADVANCED_TEST_FILE, "rb") as file:
+                data = {
+                    "column1": 4,
+                    "column2": 5,
+                    "distanceMetric": "JACCARDS"
+                }
 
-        # Load test data
-        with open(ADVANCED_TEST_FILE, "rb") as file:
-            # Test with no kCluster but custom distance metric
-            response_1 = client.post(
-                ENDPOINT_URL,
-                files={"file": file},
-                data={"column1": 4,
-                      "column2": 5,
-                      "distanceMetric": "JACCARDS"}
-            )
-            assert response_1.status_code == 200
-            assert "name" in response_1.json()
-            assert "cluster" in response_1.json()
+                if cluster_type == "3d":
+                    data.update({"column3": 6})
+                elif cluster_type == "nd":
+                    data.update({"use_3d_model": random.choice([True, False])})
 
-        # Print last response
-        print(response_1.json())
+                response = client.post(advanced_endpoint, files={"file": file}, data=data)
+
+                assert response.status_code == 200
+                assert "name" in response.json()
+                assert "cluster" in response.json()
+
+    def test_elbow(self):
+        """Test the elbow determination endpoint."""
+        with open(BASIC_TEST_FILE, "rb") as file:
+            response = client.post(ELBOW_ENDPOINT, files={"file": file})
+
+            assert response.status_code == 200
 
     def test_jobs(self):
         """
@@ -130,3 +146,10 @@ class TestApp:
 
             assert "name" in data
             assert "cluster" in data
+
+@pytest.mark.asyncio
+async def test_db_initialization():
+    """Test database initialization."""
+    await user_db.create_db_and_tables()
+    await job_db.create_db_and_tables()
+    assert True

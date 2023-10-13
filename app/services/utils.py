@@ -11,7 +11,7 @@ from fastapi import HTTPException, UploadFile
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-from app.models.basic_kmeans_model import Cluster, Centroid, Cluster3D, Centroid3D
+from app.models.custom_kmeans_model import Cluster, Centroid, Cluster3D, Centroid3D
 
 # Constants in uppercase
 CSV = '.csv'

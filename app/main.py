@@ -5,8 +5,7 @@ Hauptmodul der App.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import (all_in_one_clustering, 
-                         basic_kmeans_router, 
+from app.routers import (basic_kmeans_router, 
                          elbow_router,
                          advanced_kmeans_router,
                          basic_three_d_kmeans_router,
@@ -57,10 +56,6 @@ app.include_router(advanced_n_d_kmeans_router.router, prefix="/advanced",
 
 # ----------------------- Elbow Router --------------------------------------------------
 app.include_router(elbow_router.router, prefix="/determination", tags=["determination"])
-
-
-# This comment can be removed once the frontend team has taken over the new routers.
-app.include_router(all_in_one_clustering.router, prefix="/clustering", tags=["clustering"])
 
 
 # ----------------------- Classification Router -----------------------------------------

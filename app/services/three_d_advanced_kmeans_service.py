@@ -7,7 +7,7 @@ Service for performing 3D KMeans clustering with automatic k determination using
 from typing import Union
 from fastapi import UploadFile
 
-from app.models.basic_kmeans_model import KMeansResult3D
+from app.models.custom_kmeans_model import KMeansResult3D
 from app.services.three_d_basic_kmeans_service import perform_3d_kmeans_from_dataframe
 from app.services.utils import process_uploaded_file, normalize_dataframe, handle_categorical_data
 from app.services.advanced_kmeans_service import determine_optimal_k

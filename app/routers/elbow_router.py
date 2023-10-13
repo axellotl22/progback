@@ -17,7 +17,7 @@ from app.services.utils import save_temp_file
 router = APIRouter()
 
 @router.post("/elbow", response_model=ElbowResult)
-async def elbow_method(file: UploadFile, method: str = Form("optimized")):
+async def elbow_method(file: UploadFile, method: str = Form("standard")):
     """
     Accepts an uploaded data file and, based on the selected method, 
     computes and returns the optimal number of clusters using the KMeans elbow method.

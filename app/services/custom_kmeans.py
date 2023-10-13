@@ -16,14 +16,14 @@ logger.setLevel(logging.INFO)
 @jit(nopython=True)
 def euclidean_distance_matrix(matrix, centers):
     """
-    Calculate the Euclidean distance matrix between data points and cluster centers.
+    Compute the Euclidean distance matrix between given data points and cluster centers.
 
-    Args:
-    - matrix (numpy.ndarray): Data points.
-    - centers (numpy.ndarray): Cluster centers.
+    Parameters:
+    - matrix (numpy.ndarray): Array representing data points.
+    - centers (numpy.ndarray): Array representing cluster centers.
 
     Returns:
-    - numpy.ndarray: Euclidean distance matrix.
+    - numpy.ndarray: The Euclidean distance matrix.
     """
     diff = matrix[:, np.newaxis] - centers
     return np.sqrt((diff ** 2).sum(axis=2))
@@ -32,14 +32,14 @@ def euclidean_distance_matrix(matrix, centers):
 @jit(nopython=True)
 def manhattan_distance_matrix(matrix, centers):
     """
-    Calculate the Manhattan distance matrix between data points and cluster centers.
+    Compute the Manhattan distance matrix between given data points and cluster centers.
 
-    Args:
-    - matrix (numpy.ndarray): Data points.
-    - centers (numpy.ndarray): Cluster centers.
+    Parameters:
+    - matrix (numpy.ndarray): Array representing data points.
+    - centers (numpy.ndarray): Array representing cluster centers.
 
     Returns:
-    - numpy.ndarray: Manhattan distance matrix.
+    - numpy.ndarray: The Manhattan distance matrix.
     """
     return np.sum(np.abs(matrix[:, np.newaxis] - centers), axis=2)
 
@@ -47,14 +47,14 @@ def manhattan_distance_matrix(matrix, centers):
 @jit(nopython=True)
 def jaccard_distance_matrix(matrix, centers):
     """
-    Calculate the Jaccard distance matrix between data points and cluster centers.
+    Compute the Jaccard distance matrix between given data points and cluster centers.
 
-    Args:
-    - matrix (numpy.ndarray): Data points.
-    - centers (numpy.ndarray): Cluster centers.
+    Parameters:
+    - matrix (numpy.ndarray): Array representing data points.
+    - centers (numpy.ndarray): Array representing cluster centers.
 
     Returns:
-    - numpy.ndarray: Jaccard distance matrix.
+    - numpy.ndarray: The Jaccard distance matrix.
     """
     intersection = np.minimum(matrix[:, np.newaxis], centers).sum(axis=2)
     union = np.maximum(matrix[:, np.newaxis], centers).sum(axis=2)
@@ -63,7 +63,7 @@ def jaccard_distance_matrix(matrix, centers):
 
 class BaseOptimizedKMeans:
     """
-    Base class for optimized K-Means clustering with specified distance metrics.
+    Base class for optimized K-Means clustering using specified distance metrics.
     """
 
     supported_distance_metrics = {
@@ -74,6 +74,22 @@ class BaseOptimizedKMeans:
 
     def __init__(self, number_clusters, distance_metric="EUCLIDEAN",
                  max_iterations=300, tolerance=1e-4):
+        """
+        Constructor for the optimized K-Means clustering model.
+
+        Parameters:
+        - number_clusters (int): The desired number of clusters to form.
+        - distance_metric (str, optional): Specifies the distance metric. Options are 
+            "EUCLIDEAN", "MANHATTAN", or "JACCARDS". Defaults to "EUCLIDEAN".
+        - max_iterations (int, optional): The maximum number of iterations for the algorithm 
+            to converge. Defaults to 300.
+        - tolerance (float, optional): The threshold to determine convergence. If the change 
+            in cluster centers is below this value, the algorithm is considered to have converged. 
+            Defaults to 1e-4.
+
+        Raises:
+        - ValueError: If an unsupported distance metric is provided.
+        """
         self.number_clusters = number_clusters
         self.max_iterations = max_iterations
         self.tolerance = tolerance
@@ -87,7 +103,19 @@ class BaseOptimizedKMeans:
 
     def fit(self, data_points):
         """
-        Fit the KMeans clustering model.
+        Compute K-Means clustering and establish cluster centers.
+
+        This method initializes the cluster centers using the KMeans++ algorithm, 
+        iteratively refines the cluster assignments, and updates the cluster centers 
+        until convergence or until reaching the maximum number of iterations.
+
+        Parameters:
+        - data_points (numpy.ndarray): The input data array where each row represents 
+            an observation and each column represents a feature.
+
+        Logs:
+        - Initialization details, progress of iterations, 
+                convergence status, and potential anomalies.
         """
         logger.info("Starting fit method.")
 
@@ -141,7 +169,19 @@ class BaseOptimizedKMeans:
 
     def assign_labels(self, data_points):
         """
-        Assign labels to data points based on the fitted model.
+        Assign labels to observations based on their proximity to cluster centers.
+
+        This method calculates the distance of each observation to each cluster center 
+        and assigns each observation to the nearest cluster.
+
+        Parameters:
+        - data_points (numpy.ndarray): Array of observations to be labeled.
+
+        Returns:
+        - numpy.ndarray: Array containing the cluster label for each observation.
+
+        Logs:
+        - Information about data shape, computed distances, and any exceptions encountered.
         """
         logger.info("Starting assign_labels method.")
 
@@ -172,22 +212,55 @@ class BaseOptimizedKMeans:
 
 class OptimizedKMeans(BaseOptimizedKMeans):
     """
-    Optimized K-Means clustering with specified distance metric.
+    Optimized K-Means clustering leveraging a specified distance metric.
+    Inherits from the BaseOptimizedKMeans class.
     """
 
 
 class OptimizedMiniBatchKMeans(BaseOptimizedKMeans):
     """
-    Optimized Mini-Batch K-Means clustering with specified distance metric.
+    Optimized Mini-Batch K-Means clustering with a specified distance metric.
+    
+    The Mini-Batch K-Means algorithm iteratively refines cluster assignments using a 
+    subset of the data called a mini-batch, improving computation time especially on large datasets.
+
+    Attributes:
+        batch_size (int): The number of data points to include in each mini-batch.
     """
     # pylint: disable=too-many-arguments
 
     def __init__(self, number_clusters, distance_metric="EUCLIDEAN",
                  batch_size=100, max_iterations=300, tolerance=1e-4):
+        """
+        Constructor for the optimized Mini-Batch K-Means clustering model.
+
+        Parameters:
+        - number_clusters (int): The desired number of clusters to form.
+        - distance_metric (str, optional): Specifies the distance metric. Options are 
+            "EUCLIDEAN", "MANHATTAN", or "JACCARDS". Defaults to "EUCLIDEAN".
+        - batch_size (int, optional): The number of data points to include in each mini-batch.
+            Defaults to 100.
+        - max_iterations (int, optional): The maximum number of iterations for the algorithm 
+            to converge. Defaults to 300.
+        - tolerance (float, optional): The threshold to determine convergence. If the change 
+            in cluster centers is below this value, the algorithm is considered to have converged. 
+            Defaults to 1e-4.
+        """
         super().__init__(number_clusters, distance_metric, max_iterations, tolerance)
         self.batch_size = batch_size
 
     def fit(self, data_points):
+        """
+        Compute Mini-Batch K-Means clustering and establish cluster centers.
+
+        This method initializes the cluster centers using the KMeans++ algorithm, 
+        then iteratively refines cluster assignments using mini-batches until 
+        convergence or until reaching the maximum number of iterations.
+
+        Parameters:
+        - data_points (numpy.ndarray): The input data array where each row represents 
+            an observation and each column represents a feature.
+        """
         kmeans = KMeans(n_clusters=self.number_clusters,
                         init='k-means++', max_iter=1, n_init=1)
         kmeans.fit(data_points)

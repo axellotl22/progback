@@ -1,6 +1,6 @@
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, StaticPool
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 import pytest
@@ -66,7 +66,9 @@ def get_engine():
 
     if test_mode == "True" or test_mode is None:
         # Für Unit Tests
-        return create_engine("sqlite+aiosqlite://", connect_args={"check_same_thread": False})
+        if os.path.exists("test/test.db"):
+            os.remove("test/test.db")
+        return create_engine("sqlite+aiosqlite:///test/test.db", connect_args={"check_same_thread": False})
 
     db_url = get_database_url()
     return create_engine(db_url)
@@ -78,7 +80,9 @@ def get_async_engine():
 
     if test_mode == "True" or test_mode is None:
         # Für Unit Tests
-        return create_async_engine("sqlite+aiosqlite://", connect_args={"check_same_thread": False})
+        if os.path.exists("test/test.db"):
+            os.remove("test/test.db")
+        return create_async_engine("sqlite+aiosqlite:///test/test.db", connect_args={"check_same_thread": False})
 
     db_url = get_async_database_url()
 

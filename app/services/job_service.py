@@ -7,7 +7,9 @@ from typing import Callable, List
 import asyncio
 import logging
 from datetime import datetime
-from sqlalchemy.orm import Session
+
+from sqlalchemy import Select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.job_model import JobStatus
 from app.database.job_db import DBJob
@@ -16,7 +18,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def create_job(database: Session, user_id: int, job_parameters: str, json_input: str, name: str):
+async def create_job(database: AsyncSession, user_id: str, job_parameters: str,
+                     json_input: str, name: str):
     """
     Erstellt einen Job in der Datenbank
     """
@@ -25,46 +28,40 @@ def create_job(database: Session, user_id: int, job_parameters: str, json_input:
                    status=JobStatus.WAITING, json_values=json_input,
                    job_parameters=job_parameters, job_name=name)
     database.add(db_job)
-    database.commit()
-    database.refresh(db_job)
+    await database.commit()
+    await database.refresh(db_job)
+
     return db_job
 
 
-def set_job_result(database: Session, job_id: int, result: str):
-    """
-    Setzt das Feld "result" für einen Job in der Datenbank
-    """
-    database.query(DBJob).filter(DBJob.id.is_(job_id)).update({DBJob.result: result})
-    database.commit()
-
-
-def list_jobs(database: Session, filter_user_id: str):
+async def list_jobs(database: AsyncSession, filter_user_id: str):
     """
     Gibt eine Liste von allen Jobs der Datenbank zurück
     """
-    return database.query(DBJob).filter(DBJob.user_id == filter_user_id).all()
+    return (await database.execute(Select(DBJob).filter(DBJob.user_id == filter_user_id))).scalars()
 
-def list_jobs_name(database: Session, filter_user_id: str, name: str):
+
+async def list_jobs_name(database: AsyncSession, filter_user_id: str, name: str):
     """
     Gibt eine Liste von allen Jobs mit dem Namen der Datenbank zurück
     """
-    return database.query(DBJob).filter(DBJob.user_id == filter_user_id
-                                        and DBJob.job_name == name).all()
+    return (await database.execute(Select(DBJob).filter(DBJob.user_id == filter_user_id,
+                                                 DBJob.job_name == name))).scalars()
 
 
-def get_job_by_id(database: Session, job_id: int):
+async def get_job_by_id(database: AsyncSession, job_id: int):
     """
     Gibt einen Job mit einer bestimmten ID zurück
     """
-    return database.query(DBJob).get(job_id)
+    return await database.get(DBJob, job_id)
 
 
-def get_job_by_name(database: Session, job_name: str, filter_user_id: str):
+async def get_job_by_name(database: AsyncSession, job_name: str, filter_user_id: str):
     """
     Gibt einen Job mit einer bestimmten ID zurück
     """
-    return (database.query(DBJob).filter(DBJob.user_id == filter_user_id)
-            .where(DBJob.job_name == job_name).all())
+    return (await database.execute(Select(DBJob).filter(DBJob.user_id == filter_user_id)
+                            .where(DBJob.job_name == job_name))).scalars()
 
 
 class RunJob:

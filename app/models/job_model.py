@@ -48,7 +48,12 @@ class UserJob:
         """
         Enum für Jobtypen
         """
-        KMEANS = "KMEANS"
+        BASIC_2d_KMEANS = "BASIC_2d_KMEANS"
+        ADVANCED_2d_KMEANS = "ADVANCED_2d_KMEANS"
+        BASIC_3d_KMEANS = "BASIC_3d_KMEANS"
+        ADVANCED_3d_KMEANS = "ADVANCED_3d_KMEANS"
+        BASIC_nd_KMEANS = "BASIC_nd_KMEANS"
+        ADVANCED_nd_KMEANS = "ADVANCED_nd_KMEANS"
         DECISIONTREES = "DECISIONTREES"
 
     def __init__(self, jobtype, parameters):

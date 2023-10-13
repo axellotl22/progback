@@ -38,10 +38,15 @@ class TestApp:
         if not os.path.exists(TEMP_FILES_DIR):
             os.makedirs(TEMP_FILES_DIR)
 
+        # Setup sql tables
+        asyncio.run(user_db.create_db_and_tables())
+        asyncio.run(job_db.create_db_and_tables())
+
     @classmethod
     def teardown_class(cls):
         """Remove temporary files after tests complete."""
 
+        os.remove("test/test.db")
         shutil.rmtree(TEMP_FILES_DIR, ignore_errors=True)
 
     def test_basic(self):
@@ -49,7 +54,6 @@ class TestApp:
 
         # Load test data
         with open(BASIC_TEST_FILE, "rb") as file:
-
             # Make request
             response = client.post(ENDPOINT_URL, files={"file": file})
 
@@ -63,7 +67,6 @@ class TestApp:
 
         # Load test data
         with open(ADVANCED_TEST_FILE, "rb") as file:
-
             # Test with no kCluster but custom distance metric
             response_1 = client.post(
                 ENDPOINT_URL,
@@ -79,30 +82,51 @@ class TestApp:
         # Print last response
         print(response_1.json())
 
-    def test_register_and_jobs(self):
-
-        asyncio.run(user_db.create_db_and_tables())
-
-        # Register
+    def test_jobs(self):
+        """
+        Tests the job functionality
+        """
+        # Create an account
         reg_json = {
             "email": "test@test.com",
             "password": "test",
-            "is_active": True,
-            "is_superuser": True,
-            "is_verified": True,
-            "username": "string"
+            "username": "test"
         }
-        client.post("/register/", data=reg_json)
+        client.post("/register/", json=reg_json)
 
         # Login
         login_json = {
-            "grant_type": "",
             "username": "test@test.com",
             "password": "test",
-            "scope": "",
-            "client_id": "",
-            "client_secret": ""
         }
-        response = client.post("/login/", data=login_json)
+        client.post("/login/", data=login_json)
+        auth_cookie = client.cookies.get("fastapiusersauth")
 
-        raise Exception(response.json())
+        assert auth_cookie is not None
+
+        # Create a job
+        job_json = {
+            "name": "Test-Basic-2d-KMeans",
+            "column1": 0,
+            "column2": 1,
+            "distance_metric": "EUCLIDEAN",
+            "kmeans_type": "OptimizedKMeans",
+            "k_clusters": 3,
+            "normalize": True
+        }
+        with open(BASIC_TEST_FILE, "rb") as file:
+            result = client.post("/jobs/create/basic_2d_kmeans",
+                                 data=job_json, files={"file": file},
+                                 headers={"Cookie": "fastapiusersauth=" + auth_cookie})
+
+        job_id = result.json()["job_id"]
+        assert job_id is not None
+
+        # Connect to websocket and run job
+        with (client.websocket_connect(f"/jobs/{job_id}/",
+                                      headers={"Cookie": "fastapiusersauth=" + auth_cookie})
+              as socket):
+            data = socket.receive_json()
+
+            assert "name" in data
+            assert "cluster" in data

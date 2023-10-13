@@ -3,23 +3,22 @@ Definition von Job Endpoints
 """
 import asyncio
 import logging
-import uuid
+import os
 from typing import Optional, Union, List
 import json
 
 from fastapi import (APIRouter, WebSocket, WebSocketDisconnect,
                      Depends, UploadFile, File, Query, HTTPException)
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from pandas import read_json
 
-from app.models.clustering_model import ClusterResult
-from app.services.clustering_algorithms import CustomKMeans
-from app.services.clustering_service import process_and_cluster
-from app.database.connection import get_db
+from app.database.connection import get_async_db
+from app.services.custom_kmeans import BaseOptimizedKMeans
 from app.services.job_service import (RunJob, list_jobs, create_job, get_job_by_id,
                                       get_job_by_name, list_jobs_name)
+from app.services import basic_kmeans_service
 from app.models.job_model import UserJob, JobStatus, JobResponse, JobResponseFull
-from app.services.utils import save_temp_file, delete_file, load_dataframe
+from app.services.utils import process_uploaded_file
 from app.database.user_db import User
 from app.entitys.user import active_user, auth_backend, UserManager, get_user_manager
 
@@ -27,74 +26,54 @@ router = APIRouter()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-TEMP_FILES_DIR = "temp_files/"
 
 
 async def is_disconnected(socket: WebSocket):
     """
-    Checkt, ob der Client im Websocket disconnected
-    :param socket: offener Socket
-    :return: True bei Disconnect, bei Nachricht false
+    Function that checks if the client is disconnected
+    :param socket: current WebSocket
+    :return: True on Disconnect, False on incoming message
     """
     try:
-        print("Running disconnect check!")
+        logger.info("Running disconnect check!")
         await socket.receive()
         return False
     except WebSocketDisconnect:
-        print("WebsocketDisconnectException!")
+        logger.warning("WebSocket-Client disconnected!")
         return True
 
 
-# pylint: disable=too-many-arguments
-def kmeans_job(job_id, data_frame, name, columns, k_cluster, distance_metric,
-               cluster_count_determination):
+def run_job_22(json_values, job_parameters, name, job_id, user_id):
     """
-    Führt KMeans durch
-    :param data_frame:
-    :param name: festlegen eines Namens
-    :param columns: Spaltennamen
-    :param k_cluster: Clusteranzahl
-    :param distance_metric: Distanzmethode
-    :param cluster_count_determination: Clusterbestimmungsmethode
-    :return: Ergebnis
+    Runs the job
     """
+    # Load job info (function and parameters) from database
+    job_parameters = json.loads(job_parameters)
+    job_type = UserJob(job_parameters["jobtype"], job_parameters["parameters"])
 
-    # Create file for method
-    with open(f"{TEMP_FILES_DIR}{uuid.uuid1()}.json", "w", encoding="utf-8") as outfile:
-        outfile.write(data_frame.to_json())
-        filename = outfile.name
-
-    results = process_and_cluster(data_frame, cluster_count_determination, distance_metric,
-                                  columns, k_cluster, filename)
-
-    # Determine method used
-    if k_cluster:
-        used_method = f"Manually set to {k_cluster}"
-    else:
-        used_method = cluster_count_determination
-
-    # Return clustering result model
-    return ClusterResult(
-        user_id=-1,
-        request_id=job_id,
-        name=name or "KMeans",
-        # pylint: disable=duplicate-code
-        cluster=results["cluster"],
-        x_label=results["x_label"],
-        y_label=results["y_label"],
-        iterations=results["iterations"],
-        used_distance_metric=distance_metric,
-        used_optK_method=used_method,
-        clusters_elbow=results["clusters_elbow"],
-        clusters_silhouette=results["clusters_silhouette"]
-    )
+    # check jobType
+    if job_type.jobtype == UserJob.Type.BASIC_2d_KMEANS:
+        return basic_kmeans_service.perform_kmeans_from_dataframe(
+            data_frame=read_json(json_values),
+            filename=name,
+            distance_metric=job_type.parameters[
+                "distance_metric"],
+            kmeans_type=job_type.parameters["kmeans_type"],
+            user_id=user_id,
+            request_id=job_id,
+            advanced_k=job_type.parameters["k_clusters"],
+            normalize=job_type.parameters["normalize"])
+    # currently only Basic_2d_KMEANS is supported
+    return None
 
 
+# pylint: disable=too-many-statements
 @router.websocket("/{job_id}/")
-async def job_websocket(web_socket: WebSocket, job_id: int, database: Session = Depends(get_db),
+async def job_websocket(web_socket: WebSocket, job_id: int,
+                        database: AsyncSession = Depends(get_async_db),
                         user_manager: UserManager = Depends(get_user_manager)):
     """
-    Web-Socket für Jobs
+    Web-Socket for job connections
     """
 
     await web_socket.accept()
@@ -108,12 +87,15 @@ async def job_websocket(web_socket: WebSocket, job_id: int, database: Session = 
         return
 
     # Find job in database
-    current_job = get_job_by_id(database, job_id)
+    current_job = await get_job_by_id(database, job_id)
+
+    # check if correct user
     if current_job is None or current_job.user_id != str(user.id):
         await web_socket.send_json({})
         await web_socket.close()
         return
 
+    # disallow specific JobStatus values
     if current_job.status is JobStatus.DONE:
         await web_socket.send_json(current_job.json_values)
         await web_socket.close()
@@ -129,147 +111,106 @@ async def job_websocket(web_socket: WebSocket, job_id: int, database: Session = 
         await web_socket.close()
         return
 
-    # bei CANCELED und WAITING Job starten
+    # run if JobStatus is CANCELED or WAITING
     current_job.status = JobStatus.RUNNING
-    database.commit()
-
-    # Load job info (function and parameters) from database
-    job_json = json.loads(current_job.job_parameters)
-    job_type = UserJob(job_json["jobtype"], job_json["parameters"])
+    await database.commit()
+    await database.refresh(current_job)
 
     # Run Job
-    j = RunJob(func=kmeans_job,
-               args=[current_job.id,
-                     read_json(current_job.json_values), current_job.job_name]
-                    + list(job_type.parameters.values()))
-    run_job = asyncio.ensure_future(j.run_async())
+    try:
 
-    # Also check if client disconnects
-    run_check = asyncio.ensure_future(is_disconnected(web_socket))
+        # run in sync for test_mode
+        if os.getenv("TEST_MODE") == "True" or os.getenv("TEST_MODE") is None:
+            result = run_job_22(current_job.json_values, current_job.job_parameters,
+                                current_job.job_name, current_job.id, 0).model_dump()
 
-    # Wait for either completion or user disconnect
-    await asyncio.wait([run_job, run_check], return_when=asyncio.FIRST_COMPLETED)
+        # run async if not
+        else:
+            j = RunJob(func=run_job_22,
+                       args=[current_job.json_values,
+                             current_job.job_parameters,
+                             current_job.job_name,
+                             current_job.id,
+                             0])
+            run_job = asyncio.ensure_future(j.run_async())
 
-    # If disconnect -> cancel job
-    if run_check.done() and run_check:
-        j.cancel()
-        database.commit()
-        return
+            # Also check if client disconnects
+            run_check = asyncio.ensure_future(is_disconnected(web_socket))
 
-    result = j.result.model_dump()
+            # Wait for either completion or user disconnect
+            await asyncio.wait([run_job, run_check], return_when=asyncio.FIRST_COMPLETED)
 
-    current_job.status = j.status
-    current_job.json_values = str(result)
+            # If disconnect -> cancel job
+            if run_check.done() and run_check:
+                j.cancel()
+                await database.commit()
+                return
+            await run_job
+            result = j.result.model_dump()
+            current_job.status = j.status
 
-    database.commit()
-    database.refresh(current_job)
+        result["user_id"] = current_job.user_id
+
+        current_job.json_values = str(result)
+
+    # Handle errors
+    except ValueError as ex:
+        await web_socket.send_json({"error": "Unsupported file type"})
+        await web_socket.close()
+        current_job.status = JobStatus.ERROR
+        await database.commit()
+        raise ex
+    except Exception as ex:
+        await web_socket.send_json({"error": "Processing error"})
+        await web_socket.close()
+        current_job.status = JobStatus.ERROR
+        await database.commit()
+        raise ex
+
+    await database.commit()
+    await database.refresh(current_job)
 
     # Send result as websocket message in json format
     await web_socket.send_json(result)
     await web_socket.close()
 
 
-# pylint: disable=too-many-arguments too-many-locals
-@router.post("/create/kmeans", response_model=JobResponse)
-async def create_kmeans_job(
-        database: Session = Depends(get_db),
-        user: User = Depends(active_user),
-        file: UploadFile = File(...),
-        column1
-        : Optional[Union[str, int]] = None,
-        column2: Optional[Union[str, int]] = None,
-        k_cluster: Optional[int] = Query(
-            None, alias="kCluster", description="Number of clusters"
-        ),
-        distance_metric: Optional[str] = Query(
-            "EUCLIDEAN", alias="distanceMetric",
-            description=", ".join(CustomKMeans.supported_distance_metrics.keys())
-        ),
-        cluster_count_determination: Optional[str] = Query(
-            "ELBOW", alias="clusterDetermination",
-            description="ELBOW, SILHOUETTE"
-        ),
-        name: str = "KMeans"
-):
-    """
-    Erstellt einen Job für KMeans
-    """
-    # pylint: disable=duplicate-code
-    # Validate distance metric
-    supported_metrics = list(CustomKMeans.supported_distance_metrics.keys())
-    if distance_metric not in supported_metrics:
-        error_msg = (
-            f"{distance_metric}: Invalid distance metric. Supported metrics are: "
-            f"{', '.join(supported_metrics)}"
-        )
-        raise HTTPException(400, error_msg)
-
-    # Convert columns to int if given as string
-    if isinstance(column1, str):
-        column1 = int(column1)
-    if isinstance(column2, str):
-        column2 = int(column2)
-
-    # Process file
-    columns = [column1, column2] if column1 and column2 else None
-    file_path = save_temp_file(file, TEMP_FILES_DIR)
-
-    # Create Job in database and return object as response
-    job_type = UserJob(jobtype=UserJob.Type.KMEANS,
-                       parameters={"columns": columns,
-                                   "k_cluster": k_cluster,
-                                   "distance_metric": distance_metric,
-                                   "cluster_count_determination": cluster_count_determination})
-    try:
-        data_frame = load_dataframe(file_path)
-
-    except ValueError as error:
-        logging.error("Error reading file: %s", error)
-        raise HTTPException(400, "Unsupported file type") from error
-
-    except Exception as error:
-        logging.error("Error processing file: %s", error)
-        raise HTTPException(500, "Error processing file") from error
-
-    finally:
-        delete_file(file_path)
-
-    db_job = create_job(database, user_id=user.id, job_parameters=job_type.to_json(),
-                        json_input=data_frame.to_json(), name=name)
-
-    return JobResponse(job_id=db_job.id,
-                       user_id=db_job.user_id,
-                       job_name=db_job.job_name or "KMeans",
-                       created_at=str(db_job.created_at),
-                       job_parameters=db_job.job_parameters,
-                       status=db_job.status
-                       )
-
-
 @router.get("/list/", response_model=Union[List[JobResponse], List[JobResponseFull]])
-async def job_list(job_id: Optional[int] = None, job_name: Optional[str] = None,
-                   with_values: Optional[bool] = False, database: Session = Depends(get_db),
+async def job_list(job_id: Optional[int] = None,
+                   job_name: Optional[str] = None,
+                   with_values: Optional[bool] = False,
+                   database: AsyncSession = Depends(get_async_db),
                    user: User = Depends(active_user)):
     """
-    Gibt alle Jobs in der Datenbank als Json zurück. Optional
-    können einzelne Jobs mit bestimmter ID
-    oder Namen zurückgegeben werden. Mit dem Parameter
-    with_values werden auch gespeicherte Daten (berechnete
-    Ergebnisse oder Rohdaten) zurückgegeben.
+    Returns all jobs from the current user in the database as json list. Allows filtering by
+    "job_id" and "job_name". If the parameter "with_values" is true, the results on done
+    jobs and the input on pending jobs is also returned. Logging in is necessary to use
+    this endpoint.
+
+    Args:
+
+    job_id (int): Optional query parameter for specific job by id
+    job_name (str): Optional query parameter for specific job(s) by name
+    with_values (bool): Optional also return the results/inputs of the job
+
+    Returns:
+
+    List(JobResponse): List containing information about the jobs.
+
     """
 
     if job_id is not None:
-        db_job = get_job_by_id(database=database, job_id=job_id)
+        db_job = await get_job_by_id(database=database, job_id=job_id)
         if db_job is None or db_job.user_id != str(user.id):
             raise HTTPException(status_code=404, detail="Job nicht gefunden!")
         list_content = [db_job, ]
     elif job_name is not None:
-        db_job = get_job_by_name(database, job_name, str(user.id))
+        db_job = await get_job_by_name(database, job_name, str(user.id))
         if db_job is None:
             raise HTTPException(status_code=404, detail="Job nicht gefunden!")
-        list_content = list_jobs_name(database, str(user.id), job_name)
+        list_content = await list_jobs_name(database, str(user.id), job_name)
     else:
-        list_content = list_jobs(database, str(user.id))
+        list_content = await list_jobs(database, str(user.id))
 
     if with_values:
         result = [JobResponseFull(job_id=db_job.id,
@@ -290,3 +231,69 @@ async def job_list(job_id: Optional[int] = None, job_name: Optional[str] = None,
                               ) for db_job in list_content]
 
     return result
+
+# pylint: disable=too-many-arguments
+@router.post("/create/basic_2d_kmeans")
+async def kmeans_job2(
+        database: AsyncSession = Depends(get_async_db),
+        user: User = Depends(active_user),
+        file: UploadFile = File(...),
+        name: str = Query("KMeans", description="Name of the job"),
+        column1: int = Query(0,
+                             description="Index of the first column"),
+        column2: int = Query(1,
+                             description="Index of the second column"),
+        distance_metric: str = Query(
+            "EUCLIDEAN",
+            description="/".join(BaseOptimizedKMeans.supported_distance_metrics.keys())),
+        kmeans_type: str = Query("OptimizedKMeans",
+                                 description="OptimizedKMeans/OptimizedMiniBatchKMeans"),
+        k_clusters: int = Query(2, description="Number of clusters"),
+        normalize: bool = True
+):
+    """
+    Creates a job for basic 2D KMeans
+
+    The job is created with status WAITING returns a job_id. To run the job a websocket connection
+    to "/jobs/{job_id}/" is required. After the job is done the result will be sent as a json
+    object on that connection. The websocket requires an authentication. For that the cookie
+    "fastapiusersauth" is necessary. It is created by logging-in to the api. Jobs created here
+    are added to the job history. Logging in is necessary to use this endpoint.
+
+    Args:
+
+    file (UploadFile): Dataset uploaded by the user for clustering.
+    name (str): Choose a name for the job
+    column_1, column_2 (int): Indices of columns to be used for 2D clustering.
+    distance_metric (str): Selected metric for measuring distances between data points.
+    kmeans_type (str): Algorithm variant for clustering. 'OptimizedKMeans' is conventional,
+    while 'OptimizedMiniBatchKMeans' is faster but approximative.
+    k_clusters (int): Desired number of clusters.
+    normalize (bool): Whether to normalize data before clustering. Default is True.
+
+    Returns:
+
+    JobResponse: Object containing information about the created job.
+
+    """
+
+    data_frame, _ = process_uploaded_file(file, [column1, column2])
+    json_input = data_frame.to_json()
+
+    job_type = UserJob(jobtype=UserJob.Type.BASIC_2d_KMEANS,
+                       parameters={"k_clusters": k_clusters,
+                                   "distance_metric": distance_metric,
+                                   "kmeans_type": kmeans_type,
+                                   "normalize": normalize})
+
+    db_job = await create_job(database=database, user_id=str(user.id),
+                              job_parameters=job_type.to_json(),
+                              json_input=json_input, name=name)
+
+    return JobResponse(job_id=db_job.id,
+                       user_id=db_job.user_id,
+                       job_name=db_job.job_name or "KMeans",
+                       created_at=str(db_job.created_at),
+                       job_parameters=db_job.job_parameters,
+                       status=db_job.status
+                       )

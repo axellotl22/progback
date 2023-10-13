@@ -1,7 +1,7 @@
 """
 basic_kmeans_model.py
 ---------------------
-Contains the basic data models used for the KMeans clustering process.
+Module that defines data models used in the KMeans clustering process.
 """
 
 from typing import List, Dict
@@ -10,11 +10,11 @@ from pydantic import BaseModel
 
 class Centroid(BaseModel):
     """
-    Model representing a centroid of a cluster in 2D.
+    Represents a 2D centroid for KMeans clustering.
 
     Attributes:
-    - x (float): X-coordinate of the centroid.
-    - y (float): Y-coordinate of the centroid.
+        x (float): Horizontal position of the centroid.
+        y (float): Vertical position of the centroid.
     """
     x: float
     y: float
@@ -22,12 +22,12 @@ class Centroid(BaseModel):
 
 class Centroid3D(BaseModel):
     """
-    Model representing a centroid of a cluster in 3D.
+    Represents a 3D centroid for KMeans clustering.
 
     Attributes:
-    - x (float): X-coordinate of the centroid.
-    - y (float): Y-coordinate of the centroid.
-    - z (float): Z-coordinate of the centroid.
+        x (float): Horizontal position of the centroid.
+        y (float): Vertical position of the centroid.
+        z (float): Depth position of the centroid.
     """
     x: float
     y: float
@@ -36,12 +36,12 @@ class Centroid3D(BaseModel):
 
 class Cluster(BaseModel):
     """
-    Model representing a single cluster in 2D.
+    Describes a 2D cluster for KMeans clustering.
 
     Attributes:
-    - cluster_nr (int): Number representing the cluster.
-    - centroid (Centroid): The centroid of the cluster.
-    - points (List[Dict[str, float]]): List of points within the cluster.
+        clusterNr (int): Unique identifier for the cluster.
+        centroid (Centroid): Geometric center of the cluster.
+        points (List[Dict[str, float]]): Collection of data points associated with this cluster.
     """
     clusterNr: int
     centroid: Centroid
@@ -50,28 +50,28 @@ class Cluster(BaseModel):
 
 class Cluster3D(Cluster):
     """
-    Model representing a single cluster in 3D.
+    Describes a 3D cluster for KMeans clustering.
 
     Attributes:
-    - centroid (Centroid3D): The centroid of the cluster.
+        centroid (Centroid3D): Geometric center of the cluster.
     """
     centroid: Centroid3D
 
 
 class BasicKMeansResult(BaseModel):
     """
-    Model representing the result of the KMeans clustering process in 2D.
+    Encapsulates the results of a 2D KMeans clustering operation.
 
     Attributes:
-    - user_id (int): User ID.
-    - request_id (int): Request ID.
-    - clusters (List[Cluster]): List of resulting clusters.
-    - x_label (str): Label for the X-coordinate.
-    - y_label (str): Label for the Y-coordinate.
-    - iterations (int): Number of iterations the algorithm ran.
-    - used_distance_metric (str): The distance metric used for clustering.
-    - filename (str): Name of the file containing the data points.
-    - k_value (int): Number of clusters used.
+        user_id (int): Identifier for the user initiating the request.
+        request_id (int): Unique identifier for the clustering request.
+        cluster (List[Cluster]): Collection of identified clusters.
+        x_label (str): Description for the horizontal axis.
+        y_label (str): Description for the vertical axis.
+        iterations (int): Total number of iterations executed by the algorithm.
+        used_distance_metric (str): Metric used to determine distances between data points.
+        name (str): Reference name for the data source.
+        k_value (int): Specified number of clusters for the operation.
     """
     user_id: int
     request_id: int
@@ -86,10 +86,11 @@ class BasicKMeansResult(BaseModel):
 
 class KMeansResult3D(BasicKMeansResult):
     """
-    Model representing the result of the KMeans clustering process in 3D.
+    Encapsulates the results of a 3D KMeans clustering operation.
 
     Attributes:
-    - z_label (str): Label for the Z-coordinate.
+        z_label (str): Description for the depth axis.
+        cluster (List[Cluster3D]): Collection of identified 3D clusters.
     """
     z_label: str
     cluster: List[Cluster3D]

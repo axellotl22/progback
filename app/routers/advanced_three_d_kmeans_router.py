@@ -32,20 +32,22 @@ async def advanced_kmeans_3d(
     normalize: bool = True
 ):
     """
-    Endpoint for advanced 3D KMeans clustering with automatic k determination.
+    Advanced 3D KMeans clustering endpoint. This endpoint allows the user to perform 
+    KMeans clustering on three selected columns of the uploaded data file. The process 
+    involves determining the optimal k (number of clusters) automatically.
 
     Args:
-    - file (UploadFile): Uploaded data file.
-    - column_1 (int): Index of the first column.
-    - column_2 (int): Index of the second column.
-    - column_3 (int): Index of the third column.
-    - distance_metric (str): Distance metric for clustering.
-    - kmeans_type (str): Type of KMeans model to use.
-    - user_id (int): User ID.
-    - request_id (int): Request ID.
-    
+    - file (UploadFile): Data file uploaded by the user.
+    - column_1, column_2, column_3 (int): Indices of the columns to be used for 3D clustering.
+    - distance_metric (str): Chosen metric for measuring distances between data points.
+    - kmeans_type (str): Algorithm variant for clustering. 'OptimizedKMeans' is conventional, 
+                         while 'OptimizedMiniBatchKMeans' is faster but approximative.
+    - user_id (int): ID associated with the user.
+    - request_id (int): ID associated with this particular clustering request.
+    - normalize (bool): Whether to normalize data before clustering. Default is True.
+
     Returns:
-    - KMeansResult3D: Result of the 3D KMeans clustering.
+    - KMeansResult3D: Object detailing the result of the 3D KMeans clustering process.
     """
     try:
         kmeans_result_3d = perform_advanced_3d_kmeans(

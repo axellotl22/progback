@@ -26,18 +26,24 @@ async def advanced_kmeans_nd(
     use_3d_model:bool = False
 ):
     """
-    Endpoint for advanced N-D KMeans clustering 
-    with dimensionality reduction to 2D and automatic k determination.
+    Performs advanced N-Dimensional KMeans clustering on the provided dataset. 
+    Before clustering, t-SNE is employed for dimensionality reduction to 2D or 3D for visualization. 
+    t-SNE is chosen due to its capability to preserve local structures in high-dimensional data, 
+    making it ideal for visual representations. Furthermore, the optimal cluster count 'k' is 
+    determined automatically.
 
     Args:
-    - file (UploadFile): Uploaded data file.
-    - distance_metric (str): Distance metric for clustering.
-    - kmeans_type (str): Type of KMeans model to use.
-    - user_id (int): User ID.
-    - request_id (int): Request ID.
-    
+    - file (UploadFile): Dataset file to perform clustering on.
+    - distance_metric (str): The metric used to measure distances during clustering.
+    - kmeans_type (str): Algorithm variant for clustering. 'OptimizedKMeans' is conventional, 
+                         while 'OptimizedMiniBatchKMeans' is faster but approximative.
+    - user_id (int): Helps in tracking requests from specific users.
+    - request_id (int): A unique label for individual API interactions.
+    - use_3d_model (bool): If set to True, performs dimensionality reduction to 3D using t-SNE. 
+                           Otherwise, reduces to 2D. Default is False.
+
     Returns:
-    - KMeansResultND: Result of the advanced N-D KMeans clustering reduced to 2D.
+    - KMeansResultND: Provides the clustering results reduced to 2D or 3D for visualization.
     """
     try:
         advanced_kmeans_result_nd = perform_advanced_nd_kmeans(

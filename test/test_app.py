@@ -30,14 +30,17 @@ ENDPOINTS = {
 
 ELBOW_ENDPOINT = "/determination/elbow"
 
+
 class TestApp:
     """Test class for the application."""
 
     @classmethod
     def setup_class(cls):
         """Check if test files are present."""
-        assert os.path.exists(BASIC_TEST_FILE), f"File {BASIC_TEST_FILE} not found."
-        assert os.path.exists(ADVANCED_TEST_FILE), f"File {ADVANCED_TEST_FILE} not found."
+        assert os.path.exists(
+            BASIC_TEST_FILE), f"File {BASIC_TEST_FILE} not found."
+        assert os.path.exists(
+            ADVANCED_TEST_FILE), f"File {ADVANCED_TEST_FILE} not found."
 
         # Create temp directory if it doesn't exist
         if not os.path.exists(TEMP_FILES_DIR):
@@ -64,11 +67,16 @@ class TestApp:
                 if cluster_type == "3d":
                     data.update({"column3": 6})
 
-                response = client.post(basic_endpoint, files={"file": file}, data=data)
+                response = client.post(basic_endpoint, files={
+                                       "file": file}, data=data)
 
-                assert response.status_code == 200, f"Expected 200 status for {basic_endpoint}, got {response.status_code}"
-                assert "name" in response.json(), f"Expected 'name' key in response for {basic_endpoint}"
-                assert "cluster" in response.json(), f"Expected 'cluster' key in response for {basic_endpoint}"
+                assert response.status_code == 200, (
+                        f"Expected 200 status for {basic_endpoint}, got {response.status_code}"
+                    )
+                assert "name" in response.json(
+                ), f"Expected 'name' key in response for {basic_endpoint}"
+                assert "cluster" in response.json(
+                ), f"Expected 'cluster' key in response for {basic_endpoint}"
 
     def test_advanced(self):
         """Test advanced endpoints."""
@@ -85,7 +93,8 @@ class TestApp:
                 elif cluster_type == "nd":
                     data.update({"use_3d_model": random.choice([True, False])})
 
-                response = client.post(advanced_endpoint, files={"file": file}, data=data)
+                response = client.post(advanced_endpoint, files={
+                                       "file": file}, data=data)
 
                 assert response.status_code == 200
                 assert "name" in response.json()
@@ -140,12 +149,13 @@ class TestApp:
 
         # Connect to websocket and run job
         with (client.websocket_connect(f"/jobs/{job_id}/",
-                                      headers={"Cookie": "fastapiusersauth=" + auth_cookie})
+                                       headers={"Cookie": "fastapiusersauth=" + auth_cookie})
               as socket):
             data = socket.receive_json()
 
             assert "name" in data
             assert "cluster" in data
+
 
 @pytest.mark.asyncio
 async def test_db_initialization():

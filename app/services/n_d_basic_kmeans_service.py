@@ -11,7 +11,7 @@ import pandas as pd
 from fastapi import UploadFile
 from sklearn.manifold import TSNE
 from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
-from app.models.basic_kmeans_model import BasicKMeansResult, KMeansResult3D
+from app.models.custom_kmeans_model import BasicKMeansResult, KMeansResult3D
 from app.services.utils import (process_uploaded_file, 
                                 normalize_dataframe,
                                 handle_categorical_data, 

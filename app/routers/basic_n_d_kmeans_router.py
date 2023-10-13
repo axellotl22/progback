@@ -26,18 +26,25 @@ async def kmeans_nd(
     use_3d_model:bool=False
 ):
     """
-    Endpoint for N-D KMeans clustering with dimensionality reduction to 2D.
+    Endpoint for performing KMeans clustering on N-Dimensional data. 
+    Before clustering, the data is reduced in dimensionality 
+    using t-SNE, which helps in visualizing multi-dimensional data in 2D or 3D space. 
+    t-SNE is specifically used due to its 
+    ability to maintain local structures and reveal patterns or clusters in the data.
 
     Args:
-    - file (UploadFile): Uploaded data file.
-    - distance_metric (str): Distance metric for clustering.
-    - kmeans_type (str): Type of KMeans model to use.
-    - n_clusters (int): Number of clusters.
-    - user_id (int): User ID.
-    - request_id (int): Request ID.
-    
+    - file (UploadFile): Dataset uploaded by the user for clustering.
+    - distance_metric (str): Selected metric for measuring distances between data points.
+    - kmeans_type (str): Algorithm variant for clustering. 'OptimizedKMeans' is conventional, 
+                         while 'OptimizedMiniBatchKMeans' is faster but approximative.
+    - n_clusters (int): Desired number of clusters.
+    - user_id (int): ID associated with the user making the request.
+    - request_id (int): ID specific to this clustering request.
+    - use_3d_model (bool): If set to True, performs dimensionality reduction to 3D using t-SNE. 
+                           Otherwise, reduces to 2D. Default is False.
+
     Returns:
-    - KMeansResultND: Result of the N-D KMeans clustering reduced to 2D.
+    - KMeansResultND: Provides the clustering results reduced to 2D or 3D for visualization.
     """
     try:
         kmeans_result_nd = perform_nd_kmeans_from_file(

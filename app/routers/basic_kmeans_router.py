@@ -31,20 +31,22 @@ async def kmeans(
     normalize: bool = True
 ):
     """
-    Endpoint for KMeans clustering.
+    Endpoint for performing basic 2D KMeans clustering. The user can specify the desired 
+    number of clusters and choose columns from the uploaded dataset for clustering. 
 
     Args:
-    - file (UploadFile): Uploaded data file.
-    - column_1 (int): Index of the first column.
-    - column_2 (int): Index of the second column.
-    - distance_metric (str): Distance metric for clustering.
-    - kmeans_type (str): Type of KMeans model to use.
-    - n_clusters (int): Number of clusters.
-    - user_id (int): User ID.
-    - request_id (int): Request ID.
-    
+    - file (UploadFile): Dataset uploaded by the user for clustering.
+    - column_1, column_2 (int): Indices of columns to be used for 2D clustering.
+    - distance_metric (str): Selected metric for measuring distances between data points.
+    - kmeans_type (str): Algorithm variant for clustering. 'OptimizedKMeans' is conventional, 
+                         while 'OptimizedMiniBatchKMeans' is faster but approximative.
+    - n_clusters (int): Desired number of clusters.
+    - user_id (int): ID associated with the user making the request.
+    - request_id (int): ID specific to this clustering request.
+    - normalize (bool): Whether to normalize data before clustering. Default is True.
+
     Returns:
-    - KMeansResult: Result of the KMeans clustering.
+    - KMeansResult: Object containing details of the KMeans clustering outcome.
     """
     try:
         kmeans_result = perform_kmeans_from_file(

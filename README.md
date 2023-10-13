@@ -1,16 +1,17 @@
-# Clustering-API
+# Projektbeschreibung
 
-Das Projekt stellt eine API bereit, mit der Datenpunkte mithilfe des Clustering-Algorithmus gruppiert werden können. Benutzer können ihre Daten in Form von Excel-Dateien hochladen, und die API gibt die geclusterten Datenpunkte zurück.
+Dieses Projekt ist als Prüfungsleistung im Rahmen des Moduls "Programmierprojekt" entstanden. Es repräsentiert die Leistung des Backend-Teams. Das Projekt stellt eine API bereit, mit der Datenpunkte mithilfe des Clustering-Algorithmus gruppiert werden können. Benutzer können ihre Daten in Form von Excel-Dateien hochladen, und die API gibt die geclusterten Datenpunkte zurück.
 
 ## Inhaltsverzeichnis
 
-- [Voraussetzungen](#Voraussetzungen)
+- [Voraussetzungen](#voraussetzungen)
 - [Installation und Einrichtung](#installation-und-einrichtung)
 - [Repository-Struktur](#repository-struktur)
 - [Deployment](#deployment)
 - [API-Dokumentation](#api-dokumentation)
-- [Request](#request)
-- [Response](#response)
+- [Technologie-Stack](#technologie-stack)
+- [Konfigurationsmanagement](#konfigurationsmanagement)
+- [Beispielhaftes Bildmaterial](#beispielhaftes-bildmaterial)
 
 ## Voraussetzungen
 
@@ -30,28 +31,30 @@ cd progback
 Progback/
 │
 ├── app/                          # Hauptanwendungsverzeichnis
-│ ├── routers/                    # FastAPI-Endpunkte
-│ │
-│ ├── models/                     # Datenmodelle und -schemata
-│ │
-│ ├── services/                   # Dienstprogramme und Services
-│ │   
-│ └── main.py                     # Hauptanwendungsdatei
+│   ├── routers/                  # FastAPI-Endpunkte und Router
+│   ├── models/                   # Datenmodelle, Pydantic-Schemata
+│   ├── services/                 # Business-Logik, Dienstprogramme und Hilfsfunktionen
+│   ├── database/                 # Datenbankverbindung
+│   ├── entrys/                   # User Modelle für die App 
+│   └── main.py                   # Hauptanwendungsdatei (FastAPI-Instanz)
 │
-├── temp_files/                   # Verzeichnis für hochgeladene Dateien 
+├── temp_files/                   # Verzeichnis für temporäre Dateien (z.B. hochgeladene Dateien)
 │
-├── tests/                        # Testverzeichnis
+├── notebooks/                    # Jupyter-Notebooks für Datenanalyse und Prototyping
+│
+├── tests/                        # Testverzeichnis mit Testfällen und Fixtures
 │
 ├── .github/                      # GitHub-spezifische Dateien
-│ └── workflows/                  # CI/CD-Workflows
+│   └── workflows/                # CI/CD-Workflows und Automatisierungsskripte
 │
-├── deploy.sh                     # Automatisierte Bereitstellung des Containers und Lazydocker 
-├── docker-compose.yml
-├── Dockerfile
-├── .gitignore
-├── .env.example                  # Konfigurationsdatei für Umgebungsvariablen
-├── requirements.txt
-└── README.md
+├── deploy.sh                     # Skript für die automatisierte lokale Bereitstellung
+├── docker-compose.yml            # Docker-Compose-Konfigurationsdatei
+├── Dockerfile                    # Docker-Konfigurationsdatei für den Anwendungscontainer
+├── .gitignore                    # Liste von Dateien/Verzeichnissen, die von Git ignoriert werden
+├── .env.example                  # Beispiel- und Vorlagendatei für Umgebungsvariablen
+├── requirements.txt              # Liste der Python-Abhängigkeiten
+└── README.md                     # Dokumentation und allgemeine Projektinformationen
+
 ```
 
 ## Deployment
@@ -99,106 +102,62 @@ Das Skript wird automatisch LazyDocker installieren (wenn es noch nicht installi
 Die RESTful Webservice-API wird über [Swagger](https://swagger.io/) dokumentiert. Die Dokumentation kann auf der folgenden
 URL aufgerufen werden: http://localhost:8080/docs
 
-## Request
+## Technologie-Stack
 
-Um den Endpunkt zu nutzen, sendet man eine POST-Anfrage mit folgenden Parametern:
+### Framework: FastAPI
 
-- **file**: Die Excel- oder CSV-Datei zum Clustern (Pflicht). Als Formdaten senden.
 
-- **kCluster** (optional): Die gewünschte Anzahl an Clustern. Wenn nicht angegeben, wird die optimale Zahl automatisch bestimmt.
+Bibliotheken: Einige der Schlüsselbibliotheken, die in diesem Projekt verwendet werden, sind:
+- Pandas
+- Numpy
+- Scikit-learn (sklearn)
+- SQLAlchemy
+- Numba
 
-- **column1** (optional): Auswahl der ersten Spalte. Wenn nicht angegeben 0 (0-Indexierung)
+## Konfigurationsmanagement
 
-- **column2** (optional): Auswahl der zweiten Spalte. Wenn nicht angegeben 1 (0-Indexierung)
+1. .env Datei erzeugen:
+    ``` bash 
+   cp .env.example .env
+   ```
 
-- **distance_metric** (optional): Die gewünschte Distanzmetrik. Standardmäßig die euklidische Distanz (EUCLIDEAN, MANHATTAN, JACCARDS).
+2. Umgebungsvariablen konfigurieren:
+    ```bash
+    # Umgebungsvariablen konfigurieren
+    TEST_MODE=False 
+    DEV_MODE=True 
 
-- **clusterDetermination** (optinal): Die gewünschte Methode zur Bestimmung der optimalen Cluster-Anzahl (ELBOW, SILHOUETTE).
+    # Database Config 
+    DB_HOST=
+    DB_PORT=
+    DB_PW=
+    DB_SCHEMA=
 
-### Möglicher Aufruf über TypeScript:
-```typescript
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+    # User Config
+    APP_SECRET=
+    VERIFICATION_SECRET=
+    ```
+## Beispielhaftes Bildmaterial
+### Visualisierung Basic-3D-Clustering der Datei IRIS.csv 
+- column1, column2, column3 : 0, 1, 2
+- distance_metric: EUCLIDEAN
+- k_clusters : 3 (vorgegeben)
+- kmeans_type: OptimizedKMeans
+- normalize: True
 
-@Injectable({
-  providedIn: 'root'
-})
-export class ClusteringService {
-  private apiUrl = 'http://localhost:8080/clustering/perform-kmeans-clustering/';
+![Alt text](image-1.png)
 
-  constructor(private http: HttpClient) { }
+### Visualisierung Advanced-3D-Clustering der Datei IRIS.csv 
+- column1, column2, column3 : 0, 1, 2
+- distance_metric: EUCLIDEAN
+- kmeans_type: OptimizedKMeans
+- normalize: True
 
-  performClustering(
-    file: File,
-    column1?: string | number,
-    column2?: string | number,
-    kCluster?: number,
-    distanceMetric: string = 'EUCLIDEAN',
-    clusterDetermination: string = 'ELBOW'
-  ) {
-    const formData: FormData = new FormData();
-    formData.append('file', file);
-    let params = new HttpParams()
-      .set('distanceMetric', distanceMetric)
-      .set('clusterDetermination', clusterDetermination);
+![3D-Clustering](image.png)
 
-    if (column1 !== undefined) {
-      params = params.set('column1', column1.toString());
-    }
-    if (column2 !== undefined) {
-      params = params.set('column2', column2.toString());
-    }
-    if (kCluster !== undefined) {
-      params = params.set('kCluster', kCluster.toString());
-    }
+### Visualisierung Ellbogenmethode der Datei IRIS.csv 
 
-    return this.http.post(this.apiUrl, formData, { params: params });
-  }
-}
-```
+![Alt text](image-2.png)
 
-## Response
-
-Die API antwortet mit einem JSON-Objekt, das Folgendes enthält:
-
-- **user_id**: Aktuell nur Platzhalter
-- **request_id**: Aktuell nur Platzhalter
-- **name**: Name der Ausgabe
-- **cluster**: Eine Liste mit Clustern, die wiederum eine Liste mit den zugehörigen Datenpunkten enthalten
-- **x_label**: Name der X-Achse
-- **y_label**: Name der Y-Achse
-- **iterations**: Anzahl der Iterationen, die für das Clustering benötigt wurden
-- **used_distance_metric**: Die verwendete Distanzmetrik
-- **used_optK_method**: Die verwendete Methode zur Bestimmung der optimalen Anzahl an Clustern
-- **clusters_elbow**: Die Anzahl an Clustern, die durch die Elbow-Methode bestimmt wurde
-- **clusters_silhouette**: Die Anzahl an Clustern, die durch die Silhouette-Methode bestimmt wurde
-
-```json  
-{
-  "user_id": 0,
-  "request_id": 0,
-  "name": "string",
-  "cluster": [
-    {
-      "clusterNr": 0,
-      "centroid": {
-        "x": 0,
-        "y": 0
-      },
-      "points": [
-        {
-          "additionalProp1": 0,
-          "additionalProp2": 0,
-          "additionalProp3": 0
-        }
-      ]
-    }
-  ],
-  "x_label": "string",
-  "y_label": "string",
-  "iterations": 0,
-  "used_distance_metric": "string",
-  "used_optK_method": "string",
-  "clusters_elbow": 0,
-  "clusters_silhouette": 0
-}
+### Visualisierung Decission-Tree der Datei drug200.csv
+![Alt text](image-3.png)

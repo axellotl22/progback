@@ -2,7 +2,7 @@
 elbow_models.py
 ---------------
 
-Pydantic models for the elbow method visualization. 
+Pydantic models for the elbow method in clustering visualization.
 """
 
 from typing import List
@@ -10,11 +10,11 @@ from pydantic import BaseModel
 
 class AxisLabel(BaseModel):
     """
-    Description of the plot axes.
+    Labels for plot axes.
 
     Attributes:
-        x (str): Label for x-axis 
-        y (str): Label for y-axis
+        x (str): Label for x-axis.
+        y (str): Label for y-axis.
     """
     x: str
     y: str
@@ -22,11 +22,11 @@ class AxisLabel(BaseModel):
 
 class DataPoint(BaseModel):
     """
-    Single data point for visualization.
+    A single visualization data point.
 
     Attributes:
-        x (float): X-axis value
-        y (float): Y-axis value   
+        x (float): Value on x-axis.
+        y (float): Value on y-axis.
     """
     x: float
     y: float
@@ -34,12 +34,12 @@ class DataPoint(BaseModel):
 
 class ElbowResult(BaseModel):
     """
-    Response model for elbow method endpoint.
+    Results of the elbow method for clustering.
 
     Attributes:
-        points (List[DataPoint]): List of (x, y) points 
-        labels (AxisLabel): Axis labels
-        recommended_point (DataPoint): Recommended k value and distortion
+        points (List[DataPoint]): (x, y) points sequence.
+        labels (AxisLabel): Plot axis descriptions.
+        recommended_point (DataPoint): Optimal k and distortion.
     """
     
     points: List[DataPoint]

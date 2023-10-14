@@ -18,7 +18,7 @@ from app.routers import (basic_kmeans_router,
 from app.database import user_db, job_db
 
 
-from app.entitys.user import UserCreate, UserRead, auth_backend, fastapi_users
+from app.entitys.user import UserCreate, UserRead, UserUpdate, auth_backend, fastapi_users
 from app.routers import job_router
 
 app = FastAPI()
@@ -71,6 +71,11 @@ app.include_router(job_router.router, prefix="/jobs", tags=["jobs"])
 # ----------------------- Auth Router ---------------------------------------------------
 app.include_router(fastapi_users.get_auth_router(auth_backend), tags=["auth"])
 app.include_router(fastapi_users.get_register_router(UserRead, UserCreate), tags=["auth"])
+app.include_router(fastapi_users.get_users_router(
+    UserRead, UserUpdate),
+    tags=["users"],
+    prefix="/users"
+)
 
 
 # ----------------------- Health Check ---------------------------------------------------

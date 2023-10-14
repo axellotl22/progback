@@ -24,6 +24,25 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
+def detect_delimiter(file_path: str, n_rows=5) -> str:
+    """
+    Detects the delimiter used in a csv file.
+
+    Args:
+        file_path (str): Path to the csv file.
+        n_rows (int): Number of rows to use for detection.
+
+    Returns:
+        str: Detected delimiter.
+    """
+    with open(file_path, 'r', encoding='utf-8-sig') as file:
+        lines = [file.readline().strip() for _ in range(n_rows)]
+    delimiters = [',', ';', '\t', '|', ' ', ':']
+    for delimiter in delimiters:
+        if delimiter in lines[0]:
+            return delimiter
+    raise ValueError("Delimiter not found in file.")
+
 def load_dataframe(file_path: str) -> pd.DataFrame:
     """Loads file into a Pandas DataFrame.
 
@@ -38,7 +57,8 @@ def load_dataframe(file_path: str) -> pd.DataFrame:
     """
     # Load dataframe based on file type
     if file_path.endswith(CSV):
-        return pd.read_csv(file_path)
+        delimiter = detect_delimiter(file_path)
+        return pd.read_csv(file_path, delimiter=delimiter)
 
     if file_path.endswith(XLSX) or file_path.endswith(XLS):
         return pd.read_excel(file_path)

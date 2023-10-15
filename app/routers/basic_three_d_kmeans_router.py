@@ -31,21 +31,22 @@ async def kmeans_3d(
     normalize: bool = Query(True, description="Normalize the data before clustering")
 ):
     """
-    Endpoint for 3D KMeans clustering.
+    Basic 3D KMeans clustering endpoint. This endpoint allows the user to perform 
+    KMeans clustering on three selected columns of the uploaded data file. 
 
     Args:
-    - file (UploadFile): Uploaded data file.
-    - column_1 (int): Index of the first column.
-    - column_2 (int): Index of the second column.
-    - column_3 (int): Index of the third column.
-    - distance_metric (str): Distance metric for clustering.
-    - kmeans_type (str): Type of KMeans model to use.
-    - n_clusters (int): Number of clusters.
-    - user_id (int): User ID.
-    - request_id (int): Request ID.
-    
+    - file (UploadFile): Data file uploaded by the user.
+    - column_1, column_2, column_3 (int): Indices of the columns to be used for 3D clustering.
+    - distance_metric (str): Chosen metric for measuring distances between data points.
+    - kmeans_type (str): Algorithm variant for clustering. 'OptimizedKMeans' is conventional, 
+                         while 'OptimizedMiniBatchKMeans' is faster but approximative.
+    - k_clusters (int): Number of clusters to be formed.
+    - user_id (int): ID associated with the user.
+    - request_id (int): ID associated with this particular clustering request.
+    - normalize (bool): Whether to normalize data before clustering. Default is True.
+
     Returns:
-    - KMeansResult3D: Result of the 3D KMeans clustering.
+    - KMeansResult3D: Object detailing the result of the 3D KMeans clustering process.
     """
     try:
         kmeans_result_3d = perform_3d_kmeans_from_file(

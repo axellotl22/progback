@@ -13,7 +13,7 @@ import pandas as pd
 from fastapi import UploadFile
 
 from app.services.custom_kmeans import OptimizedKMeans, OptimizedMiniBatchKMeans
-from app.models.basic_kmeans_model import BasicKMeansResult
+from app.models.custom_kmeans_model import BasicKMeansResult
 from app.services.utils import (process_uploaded_file,normalize_dataframe, 
                                 handle_categorical_data, transform_to_2d_cluster_model)
 

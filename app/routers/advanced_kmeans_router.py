@@ -29,19 +29,24 @@ async def advanced_kmeans(
     normalize: bool = True
 ):
     """
-    Endpoint for KMeans clustering with automatic k determination.
+    Performs KMeans clustering on a 2D dataset and determines the optimal number of clusters (k) 
+    automatically.
 
     Args:
-    - file (UploadFile): Uploaded data file.
-    - column_1 (int): Index of the first column.
-    - column_2 (int): Index of the second column.
-    - distance_metric (str): Distance metric for clustering.
-    - kmeans_type (str): Type of KMeans model to use.
-    - user_id (int): User ID.
-    - request_id (int): Request ID.
+    - file (UploadFile): The dataset file uploaded by the user.
+    - column1 (int): Index of the first data column to be considered.
+    - column2 (int): Index of the second data column to be considered.
+    - distance_metric (str): The distance measure used during clustering. Choice impacts cluster 
+                             formation and results.
+    - kmeans_type (str): Algorithm variant for clustering. 'OptimizedKMeans' is conventional, 
+                         while 'OptimizedMiniBatchKMeans' is faster but approximative.
+    - user_id (int): Identifier for tracking user requests.
+    - request_id (int): Identifier for individual API calls.
+    - normalize (bool): Whether to normalize data before clustering. Default is True.
 
     Returns:
-    - KMeansResult: Result of the KMeans clustering.
+    - KMeansResult: A structured result of the clustering process, including cluster centers and 
+                    member points.
     """
     try:
         kmeans_result = perform_advanced_kmeans(

@@ -11,7 +11,7 @@ from fastapi import UploadFile
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
-from app.models.basic_kmeans_model import BasicKMeansResult
+from app.models.custom_kmeans_model import BasicKMeansResult
 from app.services.basic_kmeans_service import perform_kmeans_from_dataframe
 from app.services.utils import process_uploaded_file, normalize_dataframe, handle_categorical_data
 

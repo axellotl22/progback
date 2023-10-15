@@ -252,11 +252,11 @@ class OptimizedMiniBatchKMeans(BaseOptimizedKMeans):
     def fit(self, data_points):
         """
         Compute Mini-Batch K-Means clustering and establish cluster centers.
-
+    
         This method initializes the cluster centers using the KMeans++ algorithm, 
         then iteratively refines cluster assignments using mini-batches until 
         convergence or until reaching the maximum number of iterations.
-
+    
         Parameters:
         - data_points (numpy.ndarray): The input data array where each row represents 
             an observation and each column represents a feature.
@@ -265,27 +265,30 @@ class OptimizedMiniBatchKMeans(BaseOptimizedKMeans):
                         init='k-means++', max_iter=1, n_init=1)
         kmeans.fit(data_points)
         self.cluster_centers_ = kmeans.cluster_centers_
-
+    
         for _ in range(self.max_iterations):
             indices = np.random.choice(
                 data_points.shape[0], self.batch_size, replace=False)
             mini_batch = data_points[indices]
-
+    
             distances = self.distance(mini_batch, self.cluster_centers_)
             labels = np.argmin(distances, axis=1)
-
+    
+            # Store the current cluster centers for convergence check later
+            old_centers = self.cluster_centers_.copy()
+    
             for i in range(self.number_clusters):
                 points_in_cluster = mini_batch[labels == i]
                 if len(points_in_cluster) > 0:
                     # Use a simple moving average for updating
                     self.cluster_centers_[i] = (0.9 * self.cluster_centers_[i]
                                                 + 0.1 * points_in_cluster.mean(axis=0))
-
+    
             # Check for convergence
-            if np.all(np.abs(self.distance(self.cluster_centers_, 
-                                           self.cluster_centers_.copy()) < self.tolerance)):
+            center_shift = np.linalg.norm(self.cluster_centers_ - old_centers)
+            if center_shift < self.tolerance:
                 logger.info(
                     "Convergence reached after %d iterations.", _)
                 break
-
+            
             self.iterations_ += 1

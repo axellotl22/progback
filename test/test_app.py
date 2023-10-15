@@ -4,9 +4,12 @@ import asyncio
 import os
 import shutil
 import pytest
+import numpy as np
 
+from sklearn.cluster import KMeans as SKLearnKMeans
+from sklearn.metrics import silhouette_score
 from fastapi.testclient import TestClient
-
+from app.services import custom_kmeans
 from app.main import app
 from app.database import user_db, job_db
 
@@ -71,8 +74,8 @@ class TestApp:
                                        "file": file}, data=data)
 
                 assert response.status_code == 200, (
-                        f"Expected 200 status for {basic_endpoint}, got {response.status_code}"
-                    )
+                    f"Expected 200 status for {basic_endpoint}, got {response.status_code}"
+                )
                 assert "name" in response.json(
                 ), f"Expected 'name' key in response for {basic_endpoint}"
                 assert "cluster" in response.json(
@@ -155,6 +158,61 @@ class TestApp:
 
             assert "name" in data
             assert "cluster" in data
+
+    def test_optimized_kmeans(self):
+        """
+        Test for comparing the results of custom KMeans with scikit-learn's KMeans.
+
+        This test ensures that:
+        1. Both algorithms cluster the data points in a similar distribution.
+        2. The quality of the clusters is measured by the Silhouette Score.
+        3. The custom KMeans actually converges before reaching its maximum number of iterations.
+        """
+
+        # Set the random seed for reproducibility
+        np.random.seed(42)
+
+        # Generate data points
+        data_points = np.random.rand(1000, 2)
+
+        # Apply scikit-learn's KMeans
+        sk_kmeans = SKLearnKMeans(n_clusters=3)
+        sk_kmeans.fit(data_points)
+        sk_labels = sk_kmeans.labels_
+
+        # Apply custom KMeans
+        custom_kmeans_instance = custom_kmeans.OptimizedKMeans(
+            number_clusters=3)
+        custom_kmeans_instance.fit(data_points)
+        custom_labels = custom_kmeans_instance.assign_labels(data_points)
+
+        # Acceptance Criteria 1
+        sk_cluster_counts = [np.sum(sk_labels == i) for i in range(3)]
+        custom_cluster_counts = [np.sum(custom_labels == i) for i in range(3)]
+        # Increase the acceptable difference to 20%
+        acceptable_diff = 0.2 * data_points.shape[0]
+        diff_check = [
+            abs(sk - ck) <= acceptable_diff for sk, ck in zip(sk_cluster_counts, 
+                                                              custom_cluster_counts)
+        ]
+        assert all(diff_check), (
+            f"sk_cluster_counts: {sk_cluster_counts}, "
+            f"custom_cluster_counts: {custom_cluster_counts}"
+        )
+
+        # Acceptance Criteria 2
+        sk_silhouette = silhouette_score(data_points, sk_labels)
+        custom_silhouette = silhouette_score(data_points, custom_labels)
+        assert abs(sk_silhouette - custom_silhouette) < 0.1, (
+            f"Silhouette Score for scikit-learn: {sk_silhouette}, "
+            f"Silhouette Score for custom KMeans: {custom_silhouette}"
+        )
+
+        # Acceptance Criteria 3
+        assert custom_kmeans_instance.iterations_ < custom_kmeans_instance.max_iterations, (
+            f"Iterations: {custom_kmeans_instance.iterations_}, "
+            f"Max Iterations: {custom_kmeans_instance.max_iterations}"
+        )
 
 
 @pytest.mark.asyncio

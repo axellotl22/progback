@@ -28,7 +28,7 @@ origins = [
     "http://localhost",
     "https://localhost",
     "https://clustericke.de",
-    "https://flutter-smart-classificator-jvhasbzqea-uc.a.run.app/",
+    "https://flutter-smart-classificator-jvhasbzqea-uc.a.run.app",
 ]
 
 app.add_middleware(

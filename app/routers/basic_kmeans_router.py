@@ -63,7 +63,7 @@ async def kmeans(
         return kmeans_result
     # pylint: disable=duplicate-code
     except ValueError as error:
-        raise HTTPException(400, "Unsupported file type") from error
+        raise HTTPException(400, f"Unsupported file type: {error}") from error
 
     except Exception as error:
         raise HTTPException(500, "Error processing file") from error

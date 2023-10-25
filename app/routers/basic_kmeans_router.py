@@ -59,11 +59,12 @@ async def kmeans(
             selected_columns=[column1, column2],
             normalize=normalize
         )
+        
         # Return the KMeansResult object.
         return kmeans_result
     # pylint: disable=duplicate-code
     except ValueError as error:
-        raise HTTPException(400, "Unsupported file type") from error
+        raise HTTPException(400, f"Unsupported file type: {error}") from error
 
     except Exception as error:
         raise HTTPException(500, "Error processing file") from error

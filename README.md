@@ -35,7 +35,7 @@ Progback/
 │   ├── models/                   # Datenmodelle, Pydantic-Schemata
 │   ├── services/                 # Business-Logik, Dienstprogramme und Hilfsfunktionen
 │   ├── database/                 # Datenbankverbindung
-│   ├── entrys/                   # User Modelle für die App 
+│   ├── entitys/                  # Datenbank Modelle für die App 
 │   └── main.py                   # Hauptanwendungsdatei (FastAPI-Instanz)
 │
 ├── temp_files/                   # Verzeichnis für temporäre Dateien (z.B. hochgeladene Dateien)
